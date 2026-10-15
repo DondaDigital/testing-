@@ -1,1 +1,996 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* THEME: apply saved theme before first paint (prevents flash). Light is the default. */
+try{if(localStorage.getItem('donda_theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}
+</script>
+<title>Donda.Digital — We Build Digital Products That Matter</title>
+<meta name="description" content="Websites, web apps and AI-powered digital experiences by an independent studio.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Donda.Digital">
+<meta property="og:title" content="Donda.Digital — We Build Digital Products That Matter">
+<meta property="og:description" content="Websites, web apps and AI-powered digital experiences by an independent studio.">
+<meta property="og:url" content="https://dondadigital.vercel.app/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Donda.Digital — We Build Digital Products That Matter">
+<meta name="twitter:description" content="Websites, web apps and AI-powered digital experiences by an independent studio.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#ffffff;--bg-2:#fafafa;--surface:#f5f5f5;--ink:#0a0a0a;--ink-2:#1a1a1a;--muted:#6b6b6b;--muted-2:#9a9a9a;--stroke:#ececec;--stroke-2:#e0e0e0;--accent:#0a0a0a;
+  --font-body:'Inter',system-ui,sans-serif;--font-display:'Instrument Serif',serif;--font-mono:'JetBrains Mono',monospace;
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 8px 30px rgba(0,0,0,.06);--shadow-lg:0 20px 60px rgba(0,0,0,.08);
+}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);overflow-x:hidden;-webkit-font-smoothing:antialiased;font-weight:400;letter-spacing:-.01em}
+::selection{background:var(--ink);color:var(--bg)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+#prog{position:fixed;top:0;left:0;height:1px;background:var(--ink);width:0%;z-index:9998;transition:width .1s linear}
 
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;justify-content:space-between;padding:2.5rem;overflow:hidden}
+.l-corner{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;position:absolute;font-weight:400}
+.l-tl{top:2.5rem;left:2.5rem}.l-tr{top:2.5rem;right:2.5rem}
+#l-status{display:flex;gap:1.5rem}
+#l-status span{opacity:.35;transition:opacity .3s}
+#l-status span.on{opacity:1;color:var(--ink)}
+#l-word{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--font-display);font-style:italic;font-size:clamp(3.5rem,10vw,10rem);color:var(--ink);text-align:center;white-space:nowrap;transition:opacity .3s,transform .3s;letter-spacing:-.02em;font-weight:400}
+#l-count{position:absolute;bottom:2.5rem;right:2.5rem;font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.1em}
+#l-bar{position:absolute;bottom:0;left:0;height:1px;background:var(--ink);width:0%}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.4rem 2.5rem;display:flex;align-items:center;justify-content:space-between;transition:all .4s var(--ease-out)}
+nav.scrolled{background:rgba(255,255,255,.8);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--stroke);padding:1rem 2.5rem}
+.nav-logo{display:flex;align-items:center;gap:.65rem;text-decoration:none}
+.logo-mark{width:28px;height:28px;background:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}
+.logo-mark::after{content:'';width:8px;height:8px;background:var(--bg);border-radius:50%}
+.logo-text{font-family:var(--font-body);font-size:.92rem;letter-spacing:-.01em;color:var(--ink);font-weight:600}
+.logo-text .a{color:var(--muted);font-weight:400}
+.nav-links{display:flex;gap:.5rem;list-style:none;background:var(--bg-2);border:1px solid var(--stroke);border-radius:100px;padding:.35rem}
+.nav-links a{font-family:var(--font-body);font-size:.78rem;letter-spacing:-.005em;color:var(--muted);text-decoration:none;padding:.55rem 1.1rem;border-radius:100px;transition:all .25s;font-weight:500}
+.nav-links a:hover{color:var(--ink);background:var(--bg)}
+.nav-r{display:flex;align-items:center;gap:.6rem}
+.lang-wrap{position:relative}
+#lang-btn{display:flex;align-items:center;gap:.4rem;font-family:var(--font-body);font-size:.78rem;letter-spacing:-.005em;color:var(--ink);background:var(--bg-2);border:1px solid var(--stroke);padding:.62rem 1rem;border-radius:100px;cursor:pointer;transition:all .25s;font-weight:500}
+#lang-btn:hover{background:var(--bg);border-color:var(--stroke-2)}
+#lang-btn .arr{transition:transform .35s var(--ease-out);display:inline-block;font-size:.7rem;opacity:.5}
+#lang-btn.open .arr{transform:rotate(180deg)}
+#lang-drawer{position:absolute;top:calc(100% + 10px);right:0;background:var(--bg);border:1px solid var(--stroke);border-radius:20px;width:320px;opacity:0;transform:translateY(-8px);pointer-events:none;visibility:hidden;transition:all .35s var(--ease-out);box-shadow:var(--shadow-lg);overflow:hidden}
+#lang-drawer.open{opacity:1;transform:translateY(0);pointer-events:all;visibility:visible}
+.ld-inner{padding:1.2rem}
+.ld-title{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;padding-bottom:.8rem;border-bottom:1px solid var(--stroke)}
+.ld-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.lang-opt{display:flex;align-items:center;gap:.6rem;padding:.7rem .85rem;border:1px solid transparent;background:transparent;cursor:pointer;transition:all .25s;text-align:left;font-family:var(--font-body);color:var(--ink);border-radius:12px}
+.lang-opt:hover{background:var(--bg-2)}
+.lang-opt.active{background:var(--ink);color:var(--bg)}
+.l-flag{font-size:1.1rem;flex-shrink:0}
+.l-info{display:flex;flex-direction:column;gap:.05rem;flex:1;min-width:0}
+.l-name{font-size:.82rem;font-weight:500;line-height:1.2}
+.l-nat{font-size:.65rem;color:var(--muted);font-weight:400}
+.lang-opt.active .l-nat{color:rgba(255,255,255,.6)}
+.l-tick{font-size:.7rem;opacity:0;margin-left:auto}
+.lang-opt.active .l-tick{opacity:1}
+.nav-cta{font-family:var(--font-body);font-size:.78rem;color:var(--bg);background:var(--ink);padding:.72rem 1.4rem;text-decoration:none;border-radius:100px;transition:all .25s;font-weight:500;letter-spacing:-.005em;white-space:nowrap;display:inline-flex;align-items:center;gap:.5rem}
+.nav-cta:hover{background:var(--ink-2);transform:translateY(-1px)}
+.nav-cta .arr{transition:transform .3s}
+.nav-cta:hover .arr{transform:translateX(3px)}
+
+/* HERO */
+#hero{min-height:100vh;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:0;padding:9rem 3.5rem 5rem;position:relative;overflow:hidden;background:var(--bg)}
+.hero-bg-orb{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.03) 0%,transparent 70%);top:20%;right:-10%;pointer-events:none;filter:blur(40px)}
+.hero-content{position:relative;z-index:10;padding-right:2rem}
+.hero-eye{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:2rem;display:flex;align-items:center;gap:.7rem;opacity:0;transform:translateY(14px);animation:fadeUp .9s .9s var(--ease-out) forwards;font-weight:400}
+.hero-eye::before{content:'';width:8px;height:8px;background:var(--ink);border-radius:50%;flex-shrink:0}
+.hero-title{font-family:var(--font-display);font-size:clamp(3.5rem,7.5vw,8rem);line-height:.98;letter-spacing:-.035em;margin-bottom:2.5rem;font-weight:400;color:var(--ink)}
+.ht-row{display:block;overflow:hidden;padding:.05em 0}
+.ht-word{display:inline-block;opacity:0;transform:translateY(100%);animation:slideUpFade 1.1s var(--ease-out) forwards}
+.ht-row:nth-child(1) .ht-word{animation-delay:1.0s}
+.ht-row:nth-child(2) .ht-word{animation-delay:1.15s}
+.ht-row:nth-child(3) .ht-word{animation-delay:1.30s}
+.ht-row:nth-child(4) .ht-word{animation-delay:1.45s}
+@keyframes slideUpFade{0%{opacity:0;transform:translateY(100%)}100%{opacity:1;transform:translateY(0)}}
+.ht-accent{font-style:italic;color:var(--ink);position:relative}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.hero-desc{color:var(--muted);font-size:1.02rem;line-height:1.65;max-width:460px;margin-bottom:2.5rem;opacity:0;transform:translateY(14px);animation:fadeUp .9s 1.6s var(--ease-out) forwards;font-weight:400}
+.hero-ctas{display:flex;gap:.8rem;opacity:0;transform:translateY(14px);animation:fadeUp .9s 1.8s var(--ease-out) forwards;flex-wrap:wrap}
+.hero-3d{position:relative;z-index:10;height:600px;display:flex;align-items:center;justify-content:center;overflow:visible}
+#planet-cv{width:100%;height:100%;display:block}
+.h3d-halo{position:absolute;width:80%;height:80%;top:10%;left:10%;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.04) 0%,transparent 60%);filter:blur(30px);pointer-events:none;z-index:-1}
+
+/* BUTTONS */
+.btn{font-family:var(--font-body);font-size:.82rem;letter-spacing:-.005em;padding:.95rem 1.7rem;text-decoration:none;transition:all .3s var(--ease-out);display:inline-flex;align-items:center;gap:.55rem;cursor:pointer;border:none;border-radius:100px;font-weight:500}
+.btn-primary{color:var(--bg);background:var(--ink)}
+.btn-primary:hover{background:var(--ink-2);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.btn-outline{color:var(--ink);border:1px solid var(--stroke-2);background:transparent}
+.btn-outline:hover{border-color:var(--ink);background:var(--ink);color:var(--bg);transform:translateY(-2px)}
+.btn .arr{display:inline-block;transition:transform .3s}
+.btn:hover .arr{transform:translateX(4px)}
+.btn-sm{padding:.68rem 1.2rem;font-size:.72rem}
+
+/* MARQUEE */
+.marquee-wrap{overflow:hidden;border-top:1px solid var(--stroke);border-bottom:1px solid var(--stroke);padding:1.3rem 0;background:var(--bg-2)}
+.marquee-track{display:flex;animation:mq 40s linear infinite;width:max-content}
+.mq-item{font-family:var(--font-display);font-size:1.5rem;font-style:italic;color:var(--ink);padding:0 2rem;display:flex;align-items:center;gap:2.5rem;white-space:nowrap;font-weight:400;letter-spacing:-.01em}
+.mq-item::after{content:'';width:6px;height:6px;background:var(--ink);border-radius:50%;opacity:.3}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* SECTIONS */
+section{position:relative;overflow:hidden}
+.container{max-width:1320px;margin:0 auto;padding:0 2.5rem}
+.sec-eye{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:1.3rem;display:flex;align-items:center;gap:.7rem;font-weight:400}
+.sec-eye::before{content:'';width:8px;height:8px;background:var(--ink);border-radius:50%;flex-shrink:0}
+.sec-head{font-family:var(--font-display);font-size:clamp(2.5rem,5vw,4.8rem);line-height:1;letter-spacing:-.03em;margin-bottom:1.2rem;font-weight:400;color:var(--ink)}
+.sec-head em{font-style:italic}
+.label-pill{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--font-mono);font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);background:var(--bg-2);border:1px solid var(--stroke);padding:.5rem 1rem;border-radius:100px;margin-bottom:1.2rem;font-weight:400}
+.label-pill::before{content:'';width:6px;height:6px;background:var(--ink);border-radius:50%}
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .9s var(--ease-out),transform .9s var(--ease-out)}
+.reveal.vis{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}.d5{transition-delay:.5s}
+
+/* SOLUTIONS */
+#solutions{padding:9rem 0 6rem;background:var(--bg)}
+.sol-header{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:end;margin-bottom:4.5rem}
+.sol-sub{color:var(--muted);font-size:1rem;line-height:1.65;align-self:end;max-width:460px}
+.sol-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;align-items:start}
+.sol-card{background:var(--bg-2);border:1px solid var(--stroke);border-radius:24px;padding:2.5rem 2rem;position:relative;overflow:hidden;transition:all .5s var(--ease-out);display:flex;flex-direction:column}
+.sol-card:hover{background:var(--bg);border-color:var(--ink);transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+.sol-card.pop{background:var(--bg);border-color:var(--ink)}
+.sol-num{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.15em;color:var(--muted);margin-bottom:2rem;font-weight:400}
+.sol-icon{width:40px;height:40px;border-radius:50%;border:1px solid var(--stroke-2);color:var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:1.3rem;transition:all .4s var(--ease-out)}
+.sol-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.sol-card:hover .sol-icon{transform:rotate(-8deg) scale(1.08);background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sol-title{font-family:var(--font-display);font-size:1.9rem;line-height:1.1;margin-bottom:1rem;letter-spacing:-.02em;font-weight:400}
+.sol-desc{color:var(--muted);font-size:.9rem;line-height:1.65;margin-bottom:1.6rem}
+.sol-feats{list-style:none;margin-bottom:1rem}
+.sol-feats li{font-size:.85rem;color:var(--ink);padding:.55rem 0;border-bottom:1px solid var(--stroke);display:flex;align-items:center;gap:.7rem;font-weight:400}
+.sol-feats li::before{content:'';width:14px;height:1px;background:var(--ink);flex-shrink:0}
+.sol-price{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.15em;color:var(--muted);padding-bottom:1.3rem;display:flex;align-items:baseline;justify-content:space-between;font-weight:400}
+.sol-price-num{font-family:var(--font-display);font-size:1.6rem;color:var(--ink);letter-spacing:-.02em;font-weight:400;font-style:italic}
+.badge-pop{position:absolute;top:1.5rem;right:1.5rem;font-family:var(--font-mono);font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;background:var(--ink);color:var(--bg);padding:.4rem .8rem;border-radius:100px;font-weight:400}
+.sol-cta-wrap{margin-top:auto;padding-top:.6rem}
+/* expandable */
+.pk-head{display:block;width:100%;background:none;border:0;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer;letter-spacing:inherit}
+.pk-head>span{display:block}
+.pk-head>.sol-price,.pk-head>.sol-icon{display:flex}
+.pk-head>.pk-tg{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.9rem 0;border-top:1px solid var(--stroke)}
+.pk-ic{position:relative;width:12px;height:12px;display:block;transition:transform .5s var(--ease-out)}
+.pk-ic::before,.pk-ic::after{content:'';position:absolute;background:var(--ink);top:50%;left:0;width:12px;height:1px}
+.pk-ic::after{transform:rotate(90deg);transition:opacity .4s}
+.open .pk-ic{transform:rotate(180deg)}.open .pk-ic::after{opacity:0}
+.pk-panel{display:grid;grid-template-rows:0fr;opacity:0;visibility:hidden;transition:grid-template-rows .6s var(--ease-out),opacity .5s var(--ease-out),visibility 0s .6s}
+.open .pk-panel{grid-template-rows:1fr;opacity:1;visibility:visible;transition-delay:0s}
+.pk-in{overflow:hidden;min-height:0}
+.pk-in h4{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:400;margin:.6rem 0 .4rem}
+.pk-in p{font-size:.85rem;line-height:1.6;color:var(--ink);margin-bottom:.6rem}
+.pk-in li{opacity:0;transform:translateY(8px);transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
+.open .pk-in li{opacity:1;transform:none;transition-delay:calc(var(--i)*60ms + .15s)}
+.care{margin-top:1.2rem;display:grid;grid-template-columns:1fr 1.4fr;gap:2.5rem;padding:2rem}
+.care .sol-title{font-size:1.5rem;margin-bottom:.6rem}
+.care .sol-price{padding-bottom:.8rem}
+.care .sol-desc{margin-bottom:1rem}
+.care .sol-feats{display:grid;grid-template-columns:1fr 1fr;column-gap:2rem}
+.care-note{font-size:.78rem;color:var(--muted);margin-bottom:1rem}
+.sol-close{font-family:var(--font-display);font-style:italic;font-size:clamp(1.5rem,3vw,2.2rem);text-align:center;margin-top:3.5rem;letter-spacing:-.02em}
+
+/* TECH 3D */
+#tech3d{padding:7rem 0;background:var(--bg-2);position:relative;border-top:1px solid var(--stroke);border-bottom:1px solid var(--stroke)}
+#t3d-wrap{width:100%;height:520px;position:relative;margin-top:2rem}
+#t3d-cv{width:100%;height:100%;display:block}
+.t3d-overlay{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to right,var(--bg-2) 0%,transparent 15%,transparent 85%,var(--bg-2) 100%)}
+.t3d-labels{position:absolute;inset:0;pointer-events:none}
+.t3d-lbl{position:absolute;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:.5rem;font-weight:400}
+.t3d-lbl::before{content:'';width:20px;height:1px;background:var(--muted)}
+.tl1{top:20%;left:6%}.tl2{bottom:22%;left:8%}
+.tl3{top:18%;right:6%;flex-direction:row-reverse}.tl3::before{order:1}
+.tl4{bottom:22%;right:7%;flex-direction:row-reverse}.tl4::before{order:1}
+.t3d-header{text-align:center;margin-bottom:1rem;display:flex;flex-direction:column;align-items:center}
+.t3d-sub{text-align:center;color:var(--muted);font-size:1rem;line-height:1.65;max-width:520px;margin:1rem auto 0}
+
+/* PORTFOLIO */
+#portfolio{padding:9rem 0 6rem;background:var(--bg)}
+.pf-head{margin-bottom:3.5rem}
+.pf-card .sol-title{font-size:1.7rem}
+.pf-card .sol-desc{flex-grow:1}
+.pf-card .btn{align-self:flex-start}
+
+/* PROCESS */
+#process{padding:9rem 0;background:var(--bg)}
+.proc-head{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:end;margin-bottom:5rem}
+.proc-steps{position:relative;padding-left:4rem}
+.proc-spine{position:absolute;left:1.5rem;top:0;bottom:0;width:1px;background:var(--stroke)}
+.proc-fill{position:absolute;left:1.5rem;top:0;width:1px;background:var(--ink);height:0%;transition:height .3s ease-out}
+.proc-step{padding:2.8rem 0;border-bottom:1px solid var(--stroke);position:relative;transition:all .3s}
+.proc-step:last-child{border-bottom:none}
+.proc-dot{position:absolute;left:-2.69rem;top:3rem;width:11px;height:11px;border:1px solid var(--stroke-2);background:var(--bg);border-radius:50%;transition:all .3s}
+.proc-step:hover .proc-dot,.proc-step.reached .proc-dot{background:var(--ink);border-color:var(--ink);transform:scale(1.15)}
+.proc-num{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.15em;color:var(--muted);margin-bottom:.7rem;font-weight:400}
+.proc-tag{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);background:var(--bg-2);border:1px solid var(--stroke);padding:.32rem .75rem;border-radius:100px;display:inline-block;margin-bottom:1rem;font-weight:400}
+.proc-title{font-family:var(--font-display);font-size:2.4rem;margin-bottom:.7rem;letter-spacing:-.025em;font-weight:400;line-height:1}
+.proc-desc{color:var(--muted);font-size:.98rem;line-height:1.65;max-width:520px}
+
+/* STATS */
+#stats{padding:6rem 0;background:var(--ink);color:var(--bg)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.stat-item{padding:3rem 2rem;text-align:center;position:relative;border-right:1px solid rgba(255,255,255,.08)}
+.stat-item:last-child{border-right:none}
+.stat-num{font-family:var(--font-display);font-size:clamp(3rem,5vw,5.5rem);line-height:1;color:var(--bg);letter-spacing:-.035em;margin-bottom:.7rem;font-weight:400;font-style:italic}
+.stat-lbl{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:400}
+
+/* ABOUT */
+#about{padding:9rem 0;background:var(--bg-2);border-top:1px solid var(--stroke)}
+.ab-inner{max-width:760px;margin:0 auto}
+.ab-inner p{color:var(--muted);font-size:1.05rem;line-height:1.75;margin-bottom:1.3rem}
+.ab-inner p.ab-end{font-family:var(--font-display);font-style:italic;font-size:2rem;color:var(--ink);letter-spacing:-.02em;margin-top:2rem;margin-bottom:2rem}
+.ab-sig{border-top:1px solid var(--stroke);padding-top:1.4rem}
+.ab-name{font-family:var(--font-display);font-style:italic;font-size:1.5rem;color:var(--ink);letter-spacing:-.02em}
+.ab-role{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
+
+/* CONTACT */
+#contact{padding:9rem 0;background:var(--bg)}
+.contact-inner{max-width:1000px;margin:0 auto;padding:0 2.5rem}
+.section-header.center{text-align:center;display:flex;flex-direction:column;align-items:center;margin-bottom:3.5rem}
+.section-title{font-family:var(--font-display);font-size:clamp(2.8rem,5vw,4.5rem);line-height:1;letter-spacing:-.03em;margin-bottom:1rem;font-weight:400}
+.section-title .accent{font-style:italic}
+.section-sub{color:var(--muted);font-size:1rem;line-height:1.65;max-width:560px;font-weight:400}
+.contact-form{background:var(--bg-2);border:1px solid var(--stroke);border-radius:28px;padding:3rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+.form-row.full{grid-template-columns:1fr}
+.form-group{background:var(--bg);border:1px solid var(--stroke);border-radius:16px;padding:1rem 1.3rem;transition:border-color .3s}
+.form-group:focus-within{border-color:var(--ink)}
+.form-group label{display:block;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;font-weight:400}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:transparent;border:none;outline:none;color:var(--ink);font-family:var(--font-body);font-size:.95rem;-webkit-appearance:none;appearance:none;font-weight:400}
+.form-group input::placeholder,.form-group textarea::placeholder{color:var(--muted-2)}
+.form-group select{cursor:pointer}
+.form-group select option{background:var(--bg);color:var(--ink)}
+.form-group textarea{resize:none;height:120px;line-height:1.55}
+.consent{display:flex;align-items:flex-start;gap:.8rem;font-size:.82rem;color:var(--muted);line-height:1.5}
+.consent input{width:18px;height:18px;margin-top:.1rem;accent-color:var(--ink);flex-shrink:0;cursor:pointer}
+.consent label{cursor:pointer}
+.consent-link{background:none;border:none;font:inherit;color:var(--ink);text-decoration:underline;cursor:pointer;padding:0;margin-left:.3rem}
+.form-submit{display:flex;align-items:center;justify-content:space-between;margin-top:2rem;flex-wrap:wrap;gap:1rem}
+.form-note{font-family:var(--font-body);font-size:.78rem;color:var(--muted)}
+#form-success{display:none;text-align:center;padding:3rem 1rem}
+#form-success.show{display:block;animation:fadeUp .6s var(--ease-out)}
+#form-success h3{font-family:var(--font-display);font-style:italic;font-size:2.6rem;color:var(--ink);margin-bottom:.8rem;letter-spacing:-.02em}
+#form-success p{color:var(--muted);font-size:1rem;max-width:400px;margin:0 auto;line-height:1.6}
+#form-error{display:none;margin-top:1rem;padding:.9rem 1.2rem;border:1px solid rgba(200,50,50,.2);background:rgba(200,50,50,.05);color:#b52d2d;font-family:var(--font-body);font-size:.82rem;border-radius:12px}
+#form-error.show{display:block}
+.btn-primary[disabled]{opacity:.5;pointer-events:none}
+
+/* FOOTER */
+footer{background:var(--bg);border-top:1px solid var(--stroke);padding:2.5rem 2.5rem}
+.footer-inner{max-width:1320px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:2rem;flex-wrap:wrap}
+.f-logo{display:flex;align-items:center;gap:.65rem;text-decoration:none}
+.avail{display:flex;align-items:center;gap:.6rem;font-family:var(--font-body);font-size:.78rem;color:var(--muted);font-weight:400}
+.avail-dot{width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pdot 2s infinite;flex-shrink:0}
+.f-copy{font-family:var(--font-body);font-size:.78rem;color:var(--muted);font-weight:400}
+.f-right{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem}
+.f-links{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;justify-content:flex-end}
+.f-mail{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--font-body);font-size:.78rem;color:var(--muted);text-decoration:none;transition:color .25s;font-weight:400}
+button.f-mail{background:none;border:none;cursor:pointer;padding:0}
+.f-mail:hover{color:var(--ink)}
+.f-mail svg{width:15px;height:15px;flex-shrink:0;display:block}
+@keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+
+/* LEGAL MODAL */
+#legal{position:fixed;inset:0;z-index:10000;background:rgba(10,10,10,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1.5rem;opacity:0;visibility:hidden;transition:opacity .35s var(--ease-out),visibility 0s .35s}
+#legal.open{opacity:1;visibility:visible;transition-delay:0s}
+.lg-box{background:var(--bg);border:1px solid var(--stroke);border-radius:28px;max-width:720px;width:100%;max-height:85vh;overflow-y:auto;padding:2.5rem;box-shadow:var(--shadow-lg);transform:translateY(16px);transition:transform .5s var(--ease-out)}
+#legal.open .lg-box{transform:none}
+.lg-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.lg-box h2{font-family:var(--font-display);font-weight:400;font-size:2.2rem;letter-spacing:-.025em;line-height:1.05}
+.lg-box h3{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:400;margin:1.4rem 0 .4rem}
+.lg-box p{font-size:.9rem;line-height:1.65;color:var(--ink)}
+.lg-box mark{background:var(--surface);padding:0 .25em;border-radius:4px;color:var(--ink)}
+#lg-close{background:var(--bg-2);border:1px solid var(--stroke);border-radius:100px;font-family:var(--font-body);font-size:.75rem;padding:.55rem 1.1rem;cursor:pointer;color:var(--ink);font-weight:500;flex-shrink:0}
+#lg-close:hover{background:var(--ink);color:var(--bg)}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  nav{padding:1.2rem 1.5rem}
+  #hero{grid-template-columns:1fr;padding:8rem 1.5rem 4rem;gap:2rem}
+  .hero-3d{height:380px;order:-1;margin-bottom:1rem}
+  .hero-content{padding-right:0}
+  .sol-header{grid-template-columns:1fr;gap:2rem}
+  .sol-grid{grid-template-columns:1fr}
+  .care{grid-template-columns:1fr;gap:1rem}
+  .proc-head{grid-template-columns:1fr;gap:2rem}
+  .stats-grid{grid-template-columns:1fr}
+  .stat-item{border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+  .stat-item:last-child{border-bottom:none}
+  .nav-links{display:none}
+  .footer-inner{flex-direction:column;text-align:center;gap:1.3rem}
+  .f-right{align-items:center}.f-links{justify-content:center}
+  .container{padding:0 1.5rem}
+  .contact-inner{padding:0 1.5rem}
+  #solutions,#process,#contact,#about,#portfolio{padding:5rem 0}
+}
+@media(max-width:640px){
+  nav{padding:1rem 1.2rem}
+  #hero{padding:7rem 1.2rem 3rem}
+  .hero-title{font-size:clamp(3rem,13vw,4.5rem)}
+  .hero-ctas{flex-direction:column;width:100%}
+  .hero-ctas .btn{width:100%;justify-content:center}
+  .hero-3d{height:320px}
+  .form-row{grid-template-columns:1fr;gap:1rem}
+  .contact-form{padding:1.8rem 1.4rem}
+  .form-submit{flex-direction:column;align-items:stretch}
+  .form-submit .btn{width:100%;justify-content:center}
+  .care .sol-feats{grid-template-columns:1fr}
+  .lg-box{padding:1.6rem}
+  #t3d-wrap{height:380px}
+  #lang-drawer{width:280px;right:-40px}
+  .nav-cta{padding:.6rem 1rem;font-size:.72rem}
+  #lang-btn{padding:.55rem .85rem}
+}
+/* RESPONSIVE POLISH */
+.sol-card{min-width:0;overflow-wrap:break-word}
+.btn{max-width:100%}
+.ht-word{max-width:100%}
+.pf-grid{align-items:stretch}
+#nav-toggle{display:none;width:40px;height:40px;border-radius:50%;background:var(--bg-2);border:1px solid var(--stroke);cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0}
+#nav-toggle span{display:block;width:14px;height:1.5px;background:var(--ink);transition:transform .3s var(--ease-out),opacity .3s}
+#nav-toggle[aria-expanded="true"] span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+#nav-toggle[aria-expanded="true"] span:nth-child(2){opacity:0}
+#nav-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+@media(min-width:1400px){
+  #hero,nav,nav.scrolled{padding-left:calc((100% - 1320px)/2 + 2.5rem);padding-right:calc((100% - 1320px)/2 + 2.5rem)}
+}
+@media(max-width:960px){
+  #nav-toggle{display:flex}
+  .nav-links.open{display:flex;flex-direction:column;position:absolute;top:100%;left:1rem;right:1rem;margin-top:.4rem;border-radius:24px;padding:.5rem;background:var(--bg);box-shadow:var(--shadow-lg);gap:.1rem}
+  .nav-links.open a{display:block;padding:.9rem 1.1rem}
+  .sol-grid{grid-template-columns:1fr 1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .stat-item{border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+  .stat-item:nth-child(odd){border-right:1px solid rgba(255,255,255,.08)}
+  .stat-item:nth-last-child(-n+2){border-bottom:none}
+  .hero-3d{height:min(380px,75vw)}
+}
+@media(max-width:640px){
+  .sol-grid,.stats-grid{grid-template-columns:1fr}
+  .stat-item,.stat-item:nth-child(odd){border-right:none;border-bottom:1px solid rgba(255,255,255,.08);padding:2rem 1rem}
+  .stat-item:last-child{border-bottom:none}
+  .nav-r{gap:.4rem}
+  .lang-wrap{position:static}
+  #lang-drawer{left:1rem;right:1rem;width:auto;top:calc(100% + 8px)}
+  .sol-card{padding:2rem 1.5rem}
+  .care{padding:1.6rem 1.5rem}
+  .proc-steps{padding-left:3rem}.proc-dot{left:-1.69rem}.proc-title{font-size:2rem}
+  .ab-inner p{font-size:1rem}.ab-inner p.ab-end{font-size:1.6rem}
+  .lg-box h2{font-size:1.8rem}
+  .t3d-lbl{font-size:.55rem;max-width:44%}.t3d-lbl::before{display:none}
+  .sol-close{margin-top:2.5rem}
+}
+@media(max-width:520px){.nav-cta{display:none}}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .pk-panel,.pk-in li,.pk-ic,.pk-ic::after,#legal,.lg-box{transition:none!important}
+}
+
+/* ===== NEW: NAV LOGO IMAGE ===== */
+.nav-logo-img{display:block;width:44px;height:44px;border-radius:50%;object-fit:contain;flex-shrink:0}
+@media(max-width:640px){.nav-logo-img{width:40px;height:40px}}
+
+/* ===== NEW: THEME TOGGLE (centered, directly under the nav pill) ===== */
+#lang-drawer{z-index:5}
+.nav-links.open{z-index:6}
+.theme-toggle{position:absolute;top:calc(100% - .55rem);left:50%;transform:translateX(-50%);width:56px;height:28px;padding:0;border-radius:100px;border:1px solid var(--stroke);background:var(--bg-2);cursor:pointer;z-index:0;transition:top .4s var(--ease-out),background .3s,border-color .3s}
+nav.scrolled .theme-toggle{top:calc(100% + .5rem)}
+.theme-toggle:hover{border-color:var(--stroke-2)}
+.theme-toggle .tt-thumb{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--ink);transition:transform .4s var(--ease-out),background .3s}
+.theme-toggle .tt-ic{position:absolute;top:50%;width:12px;height:12px;margin-top:-6px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:color .3s}
+.theme-toggle .tt-sun{left:7px;color:var(--bg)}
+.theme-toggle .tt-moon{left:35px;color:var(--muted)}
+html[data-theme="dark"] .theme-toggle .tt-thumb{transform:translateX(28px)}
+html[data-theme="dark"] .theme-toggle .tt-sun{color:var(--muted)}
+html[data-theme="dark"] .theme-toggle .tt-moon{color:var(--bg)}
+@media(prefers-reduced-motion:reduce){.theme-toggle,.theme-toggle .tt-thumb,.theme-toggle .tt-ic{transition:none!important}}
+
+/* ===== NEW: DARK MODE ===== */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0a0a0a;--bg-2:#111111;--surface:#1a1a1a;--ink:#f4f4f4;--ink-2:#dcdcdc;--muted:#9f9f9f;--muted-2:#6b6b6b;--stroke:#222222;--stroke-2:#333333;--accent:#f4f4f4;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);--shadow-md:0 8px 30px rgba(0,0,0,.5);--shadow-lg:0 20px 60px rgba(0,0,0,.6);
+}
+html[data-theme="dark"] nav.scrolled{background:rgba(10,10,10,.8)}
+html[data-theme="dark"] .lang-opt.active .l-nat{color:rgba(0,0,0,.6)}
+html[data-theme="dark"] .hero-bg-orb{background:radial-gradient(circle,rgba(255,255,255,.04) 0%,transparent 70%)}
+html[data-theme="dark"] .h3d-halo{background:radial-gradient(circle,rgba(255,255,255,.05) 0%,transparent 60%)}
+html[data-theme="dark"] #stats{background:#151515;color:var(--ink)}
+html[data-theme="dark"] .stat-num{color:var(--ink)}
+html[data-theme="dark"] #planet-cv,html[data-theme="dark"] #t3d-cv{filter:invert(1)}
+html[data-theme="dark"] #form-error{color:#ff8a8a;border-color:rgba(255,120,120,.3);background:rgba(255,80,80,.08)}
+html[data-theme="dark"] #legal{background:rgba(0,0,0,.6)}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="l-corner l-tl" id="l-status"><span class="on" id="ls0">Initializing</span><span id="ls1">Loading</span><span id="ls2">Ready</span></div>
+  <div class="l-corner l-tr">Donda.Digital</div>
+  <div id="l-word">Build</div>
+  <div id="l-count">000</div>
+  <div id="l-bar"></div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#hero" class="nav-logo" aria-label="Donda Digital"><img src="digital-logo.png" alt="Donda Digital" class="nav-logo-img" width="44" height="44"></a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#hero" data-i18n="nav-home">Home</a></li>
+    <li><a href="#solutions" data-i18n="nav-solutions">Solutions</a></li>
+    <li><a href="#portfolio" data-i18n="nav-portfolio">Portfolio</a></li>
+    <li><a href="#process" data-i18n="nav-process">Process</a></li>
+    <li><a href="#about" data-i18n="nav-about">About</a></li>
+    <li><a href="#contact" data-i18n="nav-contact">Contact</a></li>
+  </ul>
+  <div class="nav-r">
+    <div class="lang-wrap">
+      <button id="lang-btn" aria-haspopup="true" aria-expanded="false" aria-controls="lang-drawer"><span id="lang-cur">EN</span><span class="arr">▾</span></button>
+      <div id="lang-drawer">
+        <div class="ld-inner">
+          <div class="ld-title" data-i18n="lang-select">Select Language</div>
+          <div class="ld-grid" id="ld-grid">
+            <button class="lang-opt active" data-lang="en"><span class="l-flag">🇬🇧</span><div class="l-info"><span class="l-name">English</span><span class="l-nat">English</span></div><span class="l-tick">✓</span></button>
+            <button class="lang-opt" data-lang="cs"><span class="l-flag">🇨🇿</span><div class="l-info"><span class="l-name">Czech</span><span class="l-nat">Čeština</span></div><span class="l-tick">✓</span></button>
+            <button class="lang-opt" data-lang="sk"><span class="l-flag">🇸🇰</span><div class="l-info"><span class="l-name">Slovak</span><span class="l-nat">Slovenčina</span></div><span class="l-tick">✓</span></button>
+            <button class="lang-opt" data-lang="fr"><span class="l-flag">🇫🇷</span><div class="l-info"><span class="l-name">French</span><span class="l-nat">Français</span></div><span class="l-tick">✓</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <a href="#contact" class="nav-cta"><span data-i18n="nav-cta">Get Started</span><span class="arr">→</span></a>
+    <button type="button" id="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button>
+  </div>
+  <!-- THEME TOGGLE: centered directly below the nav pill -->
+  <button type="button" id="theme-toggle" class="theme-toggle" role="switch" aria-checked="false" aria-label="Toggle dark mode">
+    <span class="tt-thumb"></span>
+    <svg class="tt-ic tt-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    <svg class="tt-ic tt-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg-orb"></div>
+  <div class="hero-content">
+    <p class="hero-eye" data-i18n="hero-eye">Collection '26 — Digital Agency</p>
+    <h1 class="hero-title" id="hero-title">
+      <span class="ht-row"><span class="ht-word" data-i18n="hl1">We build</span></span>
+      <span class="ht-row"><span class="ht-word ht-accent" data-i18n="hl2">digital</span></span>
+      <span class="ht-row"><span class="ht-word" data-i18n="hl3">products</span></span>
+      <span class="ht-row"><span class="ht-word" data-i18n="hl4">that matter.</span></span>
+    </h1>
+    <p class="hero-desc" data-i18n="hero-desc">Websites, web apps and AI-powered digital experiences by an independent studio.</p>
+    <div class="hero-ctas">
+      <a href="#solutions" class="btn btn-primary"><span data-i18n="cta1">View Solutions</span><span class="arr">→</span></a>
+      <a href="#contact" class="btn btn-outline"><span data-i18n="cta2">Contact Us</span></a>
+    </div>
+  </div>
+  <div class="hero-3d"><div class="h3d-halo"></div><canvas id="planet-cv" aria-hidden="true"></canvas></div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="mq-item" data-i18n="mq1">E-Commerce</span><span class="mq-item" data-i18n="mq2">Web Design</span><span class="mq-item" data-i18n="mq3">Performance Marketing</span><span class="mq-item">SEO</span><span class="mq-item" data-i18n="mq4">Brand Identity</span><span class="mq-item" data-i18n="mq5">Conversion Optimisation</span><span class="mq-item">UI / UX</span><span class="mq-item" data-i18n="mq6">Web Apps</span>
+    <span class="mq-item" data-i18n="mq1">E-Commerce</span><span class="mq-item" data-i18n="mq2">Web Design</span><span class="mq-item" data-i18n="mq3">Performance Marketing</span><span class="mq-item">SEO</span><span class="mq-item" data-i18n="mq4">Brand Identity</span><span class="mq-item" data-i18n="mq5">Conversion Optimisation</span><span class="mq-item">UI / UX</span><span class="mq-item" data-i18n="mq6">Web Apps</span>
+  </div>
+</div>
+
+<!-- SOLUTIONS -->
+<section id="solutions">
+  <div class="container">
+    <div class="sol-header">
+      <div class="reveal">
+        <p class="sec-eye" data-i18n="sol-eye">Solutions</p>
+        <h2 class="sec-head"><span data-i18n="sol-head1">Simple packages,</span><br><em data-i18n="sol-head2">clear pricing.</em></h2>
+      </div>
+      <p class="sol-sub reveal d1" data-i18n="sol-sub">Every package starts from a clear price. The final quote depends on the scope of your project.</p>
+    </div>
+    <div class="sol-grid" id="pk-grid"></div>
+    <div id="pk-care"></div>
+    <p class="sol-close reveal" data-i18n="sol-close">Professional quality without agency-level overhead.</p>
+  </div>
+</section>
+
+<!-- TECH 3D -->
+<section id="tech3d">
+  <div class="container">
+    <div class="t3d-header reveal">
+      <div class="label-pill" data-i18n="t3d-eye">Technology</div>
+      <h2 class="sec-head" style="text-align:center"><span data-i18n="t3d-head1">Built with</span> <em data-i18n="t3d-head2">precision.</em></h2>
+      <p class="t3d-sub" data-i18n="t3d-sub">Every project engineered to the highest technical standard — from architecture to deployment.</p>
+    </div>
+  </div>
+  <div id="t3d-wrap" class="reveal d1">
+    <canvas id="t3d-cv" aria-hidden="true"></canvas>
+    <div class="t3d-overlay"></div>
+    <div class="t3d-labels">
+      <div class="t3d-lbl tl1" data-i18n="tl1">Core Architecture</div>
+      <div class="t3d-lbl tl2" data-i18n="tl2">Performance Layer</div>
+      <div class="t3d-lbl tl3" data-i18n="tl3">Data Processing</div>
+      <div class="t3d-lbl tl4" data-i18n="tl4">Security Protocol</div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section id="portfolio">
+  <div class="container">
+    <div class="pf-head reveal">
+      <p class="sec-eye" data-i18n="pf-eye">Portfolio</p>
+      <h2 class="sec-head"><span data-i18n="pf-head1">Projects</span> <em data-i18n="pf-head2">worth visiting.</em></h2>
+      <p class="sol-sub" data-i18n="pf-sub">Products I designed and built myself.</p>
+    </div>
+    <div class="sol-grid pf-grid">
+      <article class="sol-card pf-card reveal d1"><div class="sol-num" data-i18n="pf-own">Own project</div><div class="sol-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3l-5 3 2 4 3-1v12h8V9l3 1 2-4-5-3a4 4 0 01-8 0z"/></svg></div><h3 class="sol-title">DondaWear</h3><p class="sol-desc" data-i18n="pf-dw">Premium streetwear for developers, creators, founders and builders.</p><a class="btn btn-outline btn-sm" href="https://dondawear.vercel.app/" target="_blank" rel="noopener noreferrer"><span data-i18n="pf-visit">Visit project</span><span class="arr">→</span></a></article>
+      <article class="sol-card pf-card reveal d2"><div class="sol-num" data-i18n="pf-own">Own project</div><div class="sol-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div><h3 class="sol-title">RentShield BG</h3><p class="sol-desc" data-i18n="pf-rs">Digital platform concept designed to make renting safer, clearer and more transparent for tenants and landlords.</p><a class="btn btn-outline btn-sm" href="https://rentshieldbg.vercel.app/" target="_blank" rel="noopener noreferrer"><span data-i18n="pf-visit">Visit project</span><span class="arr">→</span></a></article>
+      <article class="sol-card pf-card reveal d3"><div class="sol-num" data-i18n="pf-own">Own project</div><div class="sol-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M12 17v-5M10 14l2-2 2 2"/></svg></div><h3 class="sol-title">FileDrop</h3><p class="sol-desc" data-i18n="pf-fd">Simple and modern file-sharing platform designed for fast, private and effortless file transfers.</p><a class="btn btn-outline btn-sm" href="https://filedrop-tau.vercel.app/" target="_blank" rel="noopener noreferrer"><span data-i18n="pf-visit">Visit project</span><span class="arr">→</span></a></article>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="container">
+    <div class="proc-head">
+      <div class="reveal">
+        <p class="sec-eye" data-i18n="proc-eye">How We Work</p>
+        <h2 class="sec-head"><span data-i18n="proc-head1">The</span> <em data-i18n="proc-head2">protocol.</em></h2>
+      </div>
+      <p class="sol-sub reveal d1" data-i18n="proc-sub">A precise four-phase system designed to take your project from brief to live — with zero ambiguity at every step.</p>
+    </div>
+    <div class="proc-steps reveal">
+      <div class="proc-spine"></div><div class="proc-fill" id="proc-fill"></div>
+      <div class="proc-step"><div class="proc-dot"></div><div class="proc-num">01</div><span class="proc-tag" data-i18n="ph1">Phase One</span><h3 class="proc-title" data-i18n="proc-t1">Discovery</h3><p class="proc-desc" data-i18n="proc-d1">We map your goals, audience and competitive landscape before writing a single line of code.</p></div>
+      <div class="proc-step"><div class="proc-dot"></div><div class="proc-num">02</div><span class="proc-tag" data-i18n="ph2">Phase Two</span><h3 class="proc-title" data-i18n="proc-t2">Strategy</h3><p class="proc-desc" data-i18n="proc-d2">A custom growth architecture — content, UX and channel mix — aligned to your KPIs.</p></div>
+      <div class="proc-step"><div class="proc-dot"></div><div class="proc-num">03</div><span class="proc-tag" data-i18n="ph3">Phase Three</span><h3 class="proc-title" data-i18n="proc-t3">Execution</h3><p class="proc-desc" data-i18n="proc-d3">Design, development and campaign launch in agile sprints with weekly progress updates.</p></div>
+      <div class="proc-step"><div class="proc-dot"></div><div class="proc-num">04</div><span class="proc-tag" data-i18n="ph4">Phase Four</span><h3 class="proc-title" data-i18n="proc-t4">Scale</h3><p class="proc-desc" data-i18n="proc-d4">Ongoing optimisation, A/B testing and growth iteration based on live performance data.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item reveal"><div class="stat-num" data-target="52" data-suffix="+">0</div><div class="stat-lbl" data-i18n="st1">Projects Delivered</div></div>
+      <div class="stat-item reveal d1"><div class="stat-num" data-target="3" data-suffix="+">0</div><div class="stat-lbl" data-i18n="st2">Years Experience</div></div>
+      <div class="stat-item reveal d2"><div class="stat-num" data-target="100" data-suffix="%">0</div><div class="stat-lbl" data-i18n="st3">Client Satisfaction</div></div>
+      <div class="stat-item reveal d3"><div class="stat-num" data-target="3" data-prefix="€" data-suffix="k+">0</div><div class="stat-lbl" data-i18n="st4">Avg. Client Revenue</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="ab-inner">
+      <p class="sec-eye reveal" data-i18n="ab-eye">About</p>
+      <h2 class="sec-head reveal d1" data-i18n="ab-head">The person behind Donda.Digital</h2>
+      <div class="reveal d2">
+        <p data-i18n="ab1">Donda.Digital is an independent digital studio founded by Adam Donda.</p>
+        <p data-i18n="ab2">I build modern websites, digital products and AI-powered digital experiences for businesses, creators and people with ideas worth building.</p>
+        <p data-i18n="ab3">My approach combines web development, modern UI/UX, AI tools and automation. I focus on creating digital products that are clean, functional, fast and built around a real purpose.</p>
+        <p data-i18n="ab4">I believe you don't always need a large agency or a complicated process to build something great.</p>
+        <p data-i18n="ab5">You need someone who understands your idea, communicates directly with you and takes care of the project from the first concept to the final launch.</p>
+        <p data-i18n="ab6">That's what Donda.Digital is about.</p>
+        <p class="ab-end" data-i18n="ab7">Ideas into digital products.</p>
+        <div class="ab-sig"><div class="ab-name">Adam Donda</div><div class="ab-role" data-i18n="ab-role">Founder · Donda.Digital</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-inner">
+    <div class="section-header center">
+      <div class="label-pill reveal" data-i18n="contact-label">Contact</div>
+      <h2 class="section-title reveal d1"><span data-i18n="contact-title-1">Start your</span> <span class="accent" data-i18n="contact-title-2">project.</span></h2>
+      <p class="section-sub reveal d2" data-i18n="contact-sub">Tell us about your goals. We respond within 24 hours with a tailored plan — no obligation.</p>
+    </div>
+    <div class="contact-form reveal">
+      <form action="https://formspree.io/f/xaqvgjje" method="POST" id="contactForm">
+        <div class="form-row">
+          <div class="form-group"><label for="f-name" data-i18n="field-name">Full Name</label><input id="f-name" type="text" name="name" required autocomplete="name" data-i18n-placeholder="ph-name" placeholder="Your full name"/></div>
+          <div class="form-group"><label for="f-email" data-i18n="field-email">Email Address</label><input id="f-email" type="email" name="email" required autocomplete="email" data-i18n-placeholder="ph-email" placeholder="hello@yourbrand.com"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="f-company" data-i18n="field-website">Website URL</label><input id="f-company" type="text" name="company" data-i18n-placeholder="ph-company" placeholder="Company name or Website"></div>
+          <div class="form-group"><label for="f-pkg" data-i18n="field-package">Package</label>
+            <select id="f-pkg" name="package">
+              <option value="" selected data-i18n="pkg-select">Select package (optional)</option>
+              <option value="START" data-i18n="pn-START">START</option><option value="BUSINESS" data-i18n="pn-BUSINESS">BUSINESS</option><option value="PREMIUM" data-i18n="pn-PREMIUM">PREMIUM</option><option value="E-COMMERCE" data-i18n="pn-E-COMMERCE">E-COMMERCE</option><option value="CUSTOM" data-i18n="pn-CUSTOM">CUSTOM</option><option value="WEBSITE CARE" data-i18n="pn-WEBSITE CARE">WEBSITE CARE</option>
+              <option value="Not sure yet" data-i18n="pkg-none">Not sure yet</option>
+            </select></div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group"><label for="f-msg" data-i18n="field-message">Your Goal</label><textarea id="f-msg" name="message" rows="5" data-i18n-placeholder="ph-message" placeholder="Describe your vision and what success looks like…"></textarea></div>
+        </div>
+        <div class="consent">
+          <input type="checkbox" id="f-consent" name="consent" value="agreed" required>
+          <div><label for="f-consent" data-i18n="consent">I agree to the processing of my data according to the Privacy Policy</label><button type="button" class="consent-link" data-legal="privacy" data-i18n="l-priv">Privacy Policy</button></div>
+        </div>
+        <div class="form-submit"><p class="form-note" data-i18n="form-note">Your data is handled with full discretion.</p><button type="submit" class="btn btn-primary" id="form-submit-btn"><span data-i18n="form-submit">Send message</span><span class="arr">→</span></button></div>
+        <div id="form-error" role="alert" data-i18n="form-error-msg">Something went wrong. Please try again or email us directly.</div>
+      </form>
+      <div id="form-success" role="status"><h3 data-i18n="success-h">Transmission received.</h3><p data-i18n="success-p">We will be in contact within 24 hours with a personalised plan for your brand.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <div class="footer-inner">
+    <a href="#hero" class="f-logo"><div class="logo-mark"></div><span class="logo-text">Donda<span class="a">.</span>Digital</span></a>
+    <div class="avail"><span class="avail-dot"></span><span data-i18n="avail">Available for new projects</span></div>
+    <div class="f-right">
+      <div class="f-links">
+        <a href="mailto:donda.digital@gmail.com" class="f-mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"></rect><path d="M3 6.5l9 6.2 9-6.2"></path></svg><span>donda.digital@gmail.com</span></a>
+        <a href="https://www.instagram.com/donda_digital/" target="_blank" rel="noopener noreferrer" class="f-mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" stroke="none"></circle></svg><span>Instagram</span></a>
+      </div>
+      <div class="f-links">
+        <button type="button" class="f-mail" data-legal="privacy" data-i18n="l-priv">Privacy Policy</button>
+        <button type="button" class="f-mail" data-legal="terms" data-i18n="l-terms">Terms of Service</button>
+        <button type="button" class="f-mail" data-legal="cookies" data-i18n="l-cook">Cookies</button>
+      </div>
+      <p class="f-copy">© 2026 Donda.Digital — <span data-i18n="rights">All rights reserved</span></p>
+    </div>
+  </div>
+</footer>
+
+<!-- LEGAL MODAL -->
+<div id="legal" aria-hidden="true">
+  <div class="lg-box" role="dialog" aria-modal="true" aria-labelledby="lg-title">
+    <div class="lg-top"><h2 id="lg-title"></h2><button type="button" id="lg-close" data-i18n="close">Close</button></div>
+    <div id="lg-body"></div>
+  </div>
+</div>
+
+<script>
+/* ========= I18N ========= */
+const T = {
+en:{"nav-home":"Home","nav-solutions":"Solutions","nav-portfolio":"Portfolio","nav-process":"Process","nav-about":"About","nav-contact":"Contact","nav-cta":"Get Started","lang-select":"Select Language",
+"hero-eye":"Collection '26 — Digital Agency","hl1":"We build","hl2":"digital","hl3":"products","hl4":"that matter.","hero-desc":"Websites, web apps and AI-powered digital experiences by an independent studio.","cta1":"View Solutions","cta2":"Contact Us",
+"mq1":"E-Commerce","mq2":"Web Design","mq3":"Performance Marketing","mq4":"Brand Identity","mq5":"Conversion Optimisation","mq6":"Web Apps",
+"sol-eye":"Solutions","sol-head1":"Simple packages,","sol-head2":"clear pricing.","sol-sub":"Every package starts from a clear price. The final quote depends on the scope of your project.","from":"From","mo":"/ month","most-pop":"MOST POPULAR","details":"Details","what":"What I do","best":"Best for","incl":"Includes","care-note":"Larger changes and new features are quoted separately.","sol-close":"Professional quality without agency-level overhead.",
+"t3d-eye":"Technology","t3d-head1":"Built with","t3d-head2":"precision.","t3d-sub":"Every project engineered to the highest technical standard — from architecture to deployment.","tl1":"Core Architecture","tl2":"Performance Layer","tl3":"Data Processing","tl4":"Security Protocol",
+"pf-eye":"Portfolio","pf-head1":"Projects","pf-head2":"worth visiting.","pf-sub":"Products I designed and built myself.","pf-own":"Own project","pf-dw":"Premium streetwear for developers, creators, founders and builders.","pf-client":"Selected client work","pf-rs":"Digital platform concept designed to make renting safer, clearer and more transparent for tenants and landlords.","pf-fd":"Simple and modern file-sharing platform designed for fast, private and effortless file transfers.","pf-visit":"Visit project",
+"proc-eye":"How We Work","proc-head1":"The","proc-head2":"protocol.","proc-sub":"A precise four-phase system designed to take your project from brief to live — with zero ambiguity at every step.","ph1":"Phase One","ph2":"Phase Two","ph3":"Phase Three","ph4":"Phase Four","proc-t1":"Discovery","proc-d1":"We map your goals, audience and competitive landscape before writing a single line of code.","proc-t2":"Strategy","proc-d2":"A custom growth architecture — content, UX and channel mix — aligned to your KPIs.","proc-t3":"Execution","proc-d3":"Design, development and campaign launch in agile sprints with weekly progress updates.","proc-t4":"Scale","proc-d4":"Ongoing optimisation, A/B testing and growth iteration based on live performance data.",
+"st1":"Projects Delivered","st2":"Years Experience","st3":"Client Satisfaction","st4":"Avg. Client Revenue",
+"ab-eye":"About","ab-head":"The person behind Donda.Digital","ab1":"Donda.Digital is an independent digital studio founded by Adam Donda.","ab2":"I build modern websites, digital products and AI-powered digital experiences for businesses, creators and people with ideas worth building.","ab3":"My approach combines web development, modern UI/UX, AI tools and automation. I focus on creating digital products that are clean, functional, fast and built around a real purpose.","ab4":"I believe you don't always need a large agency or a complicated process to build something great.","ab5":"You need someone who understands your idea, communicates directly with you and takes care of the project from the first concept to the final launch.","ab6":"That's what Donda.Digital is about.","ab7":"Ideas into digital products.","ab-role":"Founder · Donda.Digital",
+"contact-label":"Contact","contact-title-1":"Start your","contact-title-2":"project.","contact-sub":"Tell us about your goals. We respond within 24 hours with a tailored plan — no obligation.","field-name":"Full Name","field-email":"Email Address","field-website":"Website URL","field-package":"Package","pkg-select":"Select package (optional)","pkg-none":"Not sure yet","field-message":"Your Goal","ph-name":"Your full name","ph-email":"hello@yourbrand.com","ph-company":"Company name or Website","ph-message":"Describe your vision and what success looks like…","consent":"I agree to the processing of my data according to the Privacy Policy","form-note":"Your data is handled with full discretion.","form-submit":"Send message","form-error-msg":"Something went wrong. Please try again or email us directly.","success-h":"Transmission received.","success-p":"We will be in contact within 24 hours with a personalised plan for your brand.",
+"avail":"Available for new projects","rights":"All rights reserved","l-priv":"Privacy Policy","l-terms":"Terms of Service","l-cook":"Cookies","close":"Close","pn-START":"START","pn-BUSINESS":"BUSINESS","pn-PREMIUM":"PREMIUM","pn-E-COMMERCE":"E-COMMERCE","pn-CUSTOM":"CUSTOM","pn-WEBSITE CARE":"WEBSITE CARE"},
+cs:{"nav-home":"Domů","nav-solutions":"Řešení","nav-portfolio":"Portfolio","nav-process":"Proces","nav-about":"O mně","nav-contact":"Kontakt","nav-cta":"Začít","lang-select":"Vyberte jazyk",
+"hero-eye":"Kolekce '26 — Digitální agentura","hl1":"Tvoříme","hl2":"digitální","hl3":"produkty,","hl4":"na kterých záleží.","hero-desc":"Weby, webové aplikace a digitální zážitky s podporou AI od nezávislého studia.","cta1":"Zobrazit řešení","cta2":"Kontakt",
+"mq1":"E-shopy","mq2":"Web design","mq3":"Výkonnostní marketing","mq4":"Identita značky","mq5":"Optimalizace konverzí","mq6":"Webové aplikace",
+"sol-eye":"Řešení","sol-head1":"Jednoduché balíčky,","sol-head2":"jasné ceny.","sol-sub":"Každý balíček má jasnou výchozí cenu. Konečná nabídka závisí na rozsahu vašeho projektu.","from":"Od","mo":"/ měsíc","most-pop":"NEJOBLÍBENĚJŠÍ","details":"Detaily","what":"Co dělám","best":"Vhodné pro","incl":"Obsahuje","care-note":"Větší změny a nové funkce se nacenují zvlášť.","sol-close":"Profesionální kvalita bez režie velké agentury.",
+"t3d-eye":"Technologie","t3d-head1":"Postaveno s","t3d-head2":"přesností.","t3d-sub":"Každý projekt na nejvyšší technické úrovni — od architektury po nasazení.","tl1":"Core architektura","tl2":"Výkonnostní vrstva","tl3":"Zpracování dat","tl4":"Bezpečnostní protokol",
+"pf-eye":"Portfolio","pf-head1":"Projekty,","pf-head2":"které stojí za návštěvu.","pf-sub":"Produkty, které jsem navrhl a postavil sám.","pf-own":"Vlastní projekt","pf-dw":"Prémiový streetwear pro vývojáře, tvůrce, zakladatele a buildery.","pf-client":"Vybrané klientské projekty","pf-rs":"Koncept digitální platformy, která má udělat pronájem bezpečnější, přehlednější a transparentnější pro nájemníky i pronajímatele.","pf-fd":"Jednoduchá a moderní platforma pro sdílení souborů, navržená pro rychlé, soukromé a bezproblémové přenosy.","pf-visit":"Navštívit projekt",
+"proc-eye":"Jak pracujeme","proc-head1":"Náš","proc-head2":"protokol.","proc-sub":"Čtyřfázový systém, který provede váš projekt od briefu po spuštění.","ph1":"Fáze první","ph2":"Fáze druhá","ph3":"Fáze třetí","ph4":"Fáze čtvrtá","proc-t1":"Discovery","proc-d1":"Zmapujeme cíle, publikum a konkurenci, než napíšeme první řádek kódu.","proc-t2":"Strategie","proc-d2":"Růstová architektura sladěná s vašimi KPI.","proc-t3":"Realizace","proc-d3":"Design, vývoj a spuštění v agilních sprintech.","proc-t4":"Škálování","proc-d4":"Průběžná optimalizace, A/B testy a iterace na základě dat.",
+"st1":"Dokončených projektů","st2":"Let zkušeností","st3":"Spokojenost klientů","st4":"Prům. tržby klientů",
+"ab-eye":"O mně","ab-head":"Člověk za Donda.Digital","ab1":"Donda.Digital je nezávislé digitální studio, které založil Adam Donda.","ab2":"Vytvářím moderní weby, digitální produkty a digitální zážitky s podporou AI pro firmy, tvůrce a lidi s nápady, které stojí za realizaci.","ab3":"Můj přístup spojuje webový vývoj, moderní UI/UX, nástroje AI a automatizaci. Soustředím se na digitální produkty, které jsou čisté, funkční, rychlé a postavené kolem skutečného účelu.","ab4":"Věřím, že k vytvoření něčeho skvělého nemusíte potřebovat velkou agenturu ani složitý proces.","ab5":"Potřebujete někoho, kdo pochopí váš nápad, komunikuje přímo s vámi a postará se o projekt od prvního konceptu až po finální spuštění.","ab6":"O tom Donda.Digital je.","ab7":"Z nápadů digitální produkty.","ab-role":"Zakladatel · Donda.Digital",
+"contact-label":"Kontakt","contact-title-1":"Začněte svůj","contact-title-2":"projekt.","contact-sub":"Řekněte nám o svých cílech. Do 24 hodin se ozveme s plánem na míru — nezávazně.","field-name":"Celé jméno","field-email":"E-mail","field-website":"Web","field-package":"Balíček","pkg-select":"Vyberte balíček (nepovinné)","pkg-none":"Zatím nevím","field-message":"Váš cíl","ph-name":"Vaše celé jméno","ph-email":"ahoj@vasznacka.cz","ph-company":"Firma nebo web","ph-message":"Popište svou vizi a jak vypadá úspěch…","consent":"Souhlasím se zpracováním svých údajů podle Zásad ochrany osobních údajů","form-note":"S vašimi daty zacházíme diskrétně.","form-submit":"Odeslat zprávu","form-error-msg":"Něco se pokazilo. Zkuste to znovu nebo nám napište e-mail.","success-h":"Přenos přijat.","success-p":"Do 24 hodin se ozveme s plánem na míru pro vaši značku.",
+"avail":"K dispozici pro nové projekty","rights":"Všechna práva vyhrazena","l-priv":"Zásady ochrany osobních údajů","l-terms":"Obchodní podmínky","l-cook":"Cookies","close":"Zavřít",
+"For simple landing pages and smaller projects.":"Pro jednoduché landing pages a menší projekty.","For businesses that need a complete professional website.":"Pro firmy, které potřebují kompletní profesionální web.","For advanced websites and more customised digital experiences.":"Pro pokročilé weby a více přizpůsobené digitální zážitky.","For businesses ready to sell online.":"Pro firmy připravené prodávat online.","For web applications, custom platforms and complex digital products.":"Pro webové aplikace, vlastní platformy a složité digitální produkty.","For clients who want ongoing support after launch.":"Pro klienty, kteří chtějí průběžnou podporu po spuštění.",
+"Start with START":"Začít s balíčkem START","Build my website":"Postavit můj web","Start a premium project":"Zahájit prémiový projekt","Build my store":"Postavit můj obchod","Discuss my project":"Probrat můj projekt","Ask about WEBSITE CARE":"Zeptat se na péči o web","pn-START":"START","pn-BUSINESS":"FIRMA","pn-PREMIUM":"PREMIUM","pn-E-COMMERCE":"E-SHOP","pn-CUSTOM":"NA MÍRU","pn-WEBSITE CARE":"PÉČE O WEB","1-page website":"Jednostránkový web","Custom responsive design":"Responzivní design na míru","Mobile optimisation":"Optimalizace pro mobily","Contact form":"Kontaktní formulář","Basic SEO":"Základní SEO","Deployment":"Nasazení online","Up to 5 pages":"Až 5 stránek","Custom UI/UX":"UI/UX na míru","Responsive development":"Responzivní vývoj","Contact forms":"Kontaktní formuláře","Basic SEO setup":"Základní nastavení SEO","Analytics":"Analytika","Performance optimisation":"Optimalizace výkonu","Up to 10 pages":"Až 10 stránek","Fully custom design":"Zcela individuální design","Advanced animations":"Pokročilé animace","CMS where appropriate":"CMS, kde to dává smysl","Integrations":"Integrace","SEO setup":"Nastavení SEO","Custom storefront":"Vlastní podoba obchodu","Product structure":"Struktura produktů","Shopping cart":"Nákupní košík","Payment integration":"Integrace plateb","Checkout":"Pokladna","Responsive design":"Responzivní design","Custom functionality":"Funkce na míru","Web applications":"Webové aplikace","Dashboards":"Dashboardy","API integrations":"Integrace API","AI integrations":"Integrace AI","Advanced workflows":"Pokročilé workflow","Custom development":"Vývoj na míru","Website updates":"Aktualizace webu","Content changes":"Změny obsahu","Technical maintenance":"Technická údržba","Bug fixes":"Opravy chyb","Performance checks":"Kontrola výkonu","Small improvements":"Drobná vylepšení","I design and build a single-page website around your idea. It is responsive, fast and published online for you.":"Navrhnu a postavím jednostránkový web podle vašeho nápadu. Je responzivní, rychlý a zveřejním ho online.","I build a multi-page website with a custom interface around your business. It covers structure, design, development and launch.":"Postavím vícestránkový web s vlastním rozhraním přizpůsobeným vašemu podnikání. Zahrnuje strukturu, design, vývoj i spuštění.","I create a fully custom website with advanced animations and richer interactions. Where it makes sense, I add a CMS and integrations with the tools you use.":"Vytvořím zcela individuální web s pokročilými animacemi a bohatšími interakcemi. Tam, kde to dává smysl, přidám CMS a integrace s nástroji, které používáte.","I build an online store with a custom storefront, product structure and checkout. Payments are connected so you can start selling.":"Postavím online obchod s vlastní podobou, strukturou produktů a pokladnou. Propojím platby, abyste mohli začít prodávat.","I develop web applications, dashboards and custom platforms around your requirements. This can include API and AI integrations and advanced workflows.":"Vyvíjím webové aplikace, dashboardy a vlastní platformy podle vašich požadavků. Může jít i o integrace API a AI a pokročilé workflow.","Landing pages, personal pages and smaller projects.":"Landing pages, osobní weby a menší projekty.","Businesses that need a complete, professional web presence.":"Firmy, které potřebují kompletní profesionální web.","Brands that want a more customised, distinctive digital experience.":"Značky, které chtějí individuálnější a výraznější digitální zážitek.","Businesses ready to sell online.":"Firmy připravené prodávat online.","Complex digital products and ideas that do not fit a standard package.":"Složité digitální produkty a nápady, které se nevejdou do standardního balíčku."},
+sk:{"nav-home":"Domov","nav-solutions":"Riešenia","nav-portfolio":"Portfólio","nav-process":"Proces","nav-about":"O mne","nav-contact":"Kontakt","nav-cta":"Začať","lang-select":"Vyberte jazyk",
+"hl1":"Tvoríme","hl2":"digitálne","hl3":"produkty,","hl4":"na ktorých záleží.","hero-desc":"Weby, webové aplikácie a digitálne zážitky s podporou AI od nezávislého štúdia.","cta1":"Zobraziť riešenia","cta2":"Kontakt",
+"sol-eye":"Riešenia","sol-head1":"Jednoduché balíčky,","sol-head2":"jasné ceny.","sol-sub":"Každý balíček má jasnú východiskovú cenu. Konečná ponuka závisí od rozsahu vášho projektu.","from":"Od","mo":"/ mesiac","most-pop":"NAJOBĽÚBENEJŠÍ","details":"Detaily","what":"Čo robím","best":"Vhodné pre","incl":"Obsahuje","care-note":"Väčšie zmeny a nové funkcie sa cenia osobitne.","sol-close":"Profesionálna kvalita bez réžie veľkej agentúry.",
+"pf-eye":"Portfólio","pf-head1":"Projekty,","pf-head2":"ktoré stoja za návštevu.","pf-sub":"Produkty, ktoré som navrhol a postavil sám.","pf-own":"Vlastný projekt","pf-dw":"Prémiový streetwear pre vývojárov, tvorcov, zakladateľov a builderov.","pf-client":"Vybrané klientske projekty","pf-rs":"Koncept digitálnej platformy, ktorá má urobiť prenájom bezpečnejším, prehľadnejším a transparentnejším pre nájomníkov aj prenajímateľov.","pf-fd":"Jednoduchá a moderná platforma na zdieľanie súborov, navrhnutá pre rýchle, súkromné a bezproblémové prenosy.","pf-visit":"Navštíviť projekt",
+"st1":"Dokončených projektov","st2":"Rokov skúseností","st3":"Spokojnosť klientov","st4":"Priem. tržby klientov",
+"ab-eye":"O mne","ab-head":"Človek za Donda.Digital","ab1":"Donda.Digital je nezávislé digitálne štúdio, ktoré založil Adam Donda.","ab2":"Vytváram moderné weby, digitálne produkty a digitálne zážitky s podporou AI pre firmy, tvorcov a ľudí s nápadmi, ktoré stoja za realizáciu.","ab3":"Môj prístup spája webový vývoj, moderné UI/UX, nástroje AI a automatizáciu. Sústreďujem sa na digitálne produkty, ktoré sú čisté, funkčné, rýchle a postavené okolo skutočného účelu.","ab4":"Verím, že na vytvorenie niečoho skvelého nepotrebujete veľkú agentúru ani zložitý proces.","ab5":"Potrebujete niekoho, kto pochopí váš nápad, komunikuje priamo s vami a postará sa o projekt od prvého konceptu až po finálne spustenie.","ab6":"O tom je Donda.Digital.","ab7":"Z nápadov digitálne produkty.","ab-role":"Zakladateľ · Donda.Digital",
+"contact-label":"Kontakt","contact-title-1":"Začnite svoj","contact-title-2":"projekt.","contact-sub":"Povedzte nám o svojich cieľoch. Do 24 hodín sa ozveme s plánom na mieru — nezáväzne.","field-name":"Celé meno","field-email":"E-mail","field-website":"Web","field-package":"Balíček","pkg-select":"Vyberte balíček (nepovinné)","pkg-none":"Zatiaľ neviem","field-message":"Váš cieľ","ph-name":"Vaše celé meno","ph-email":"ahoj@vasaznacka.sk","ph-company":"Firma alebo web","ph-message":"Opíšte svoju víziu a ako vyzerá úspech…","consent":"Súhlasím so spracovaním svojich údajov podľa Zásad ochrany osobných údajov","form-note":"S vašimi údajmi zaobchádzame diskrétne.","form-submit":"Odoslať správu","form-error-msg":"Niečo sa pokazilo. Skúste to znova alebo nám napíšte e-mail.","success-h":"Prenos prijatý.","success-p":"Do 24 hodín sa ozveme s plánom na mieru pre vašu značku.",
+"avail":"K dispozícii pre nové projekty","rights":"Všetky práva vyhradené","l-priv":"Zásady ochrany osobných údajov","l-terms":"Obchodné podmienky","l-cook":"Cookies","close":"Zavrieť",
+"For simple landing pages and smaller projects.":"Pre jednoduché landing pages a menšie projekty.","For businesses that need a complete professional website.":"Pre firmy, ktoré potrebujú kompletný profesionálny web.","For advanced websites and more customised digital experiences.":"Pre pokročilé weby a viac prispôsobené digitálne zážitky.","For businesses ready to sell online.":"Pre firmy pripravené predávať online.","For web applications, custom platforms and complex digital products.":"Pre webové aplikácie, vlastné platformy a zložité digitálne produkty.","For clients who want ongoing support after launch.":"Pre klientov, ktorí chcú priebežnú podporu po spustení.",
+"Start with START":"Začať s balíčkom START","Build my website":"Postaviť môj web","Start a premium project":"Začať prémiový projekt","Build my store":"Postaviť môj obchod","Discuss my project":"Prediskutovať môj projekt","Ask about WEBSITE CARE":"Opýtať sa na starostlivosť o web","pn-START":"START","pn-BUSINESS":"FIRMA","pn-PREMIUM":"PREMIUM","pn-E-COMMERCE":"E-SHOP","pn-CUSTOM":"NA MIERU","pn-WEBSITE CARE":"STAROSTLIVOSŤ O WEB","1-page website":"Jednostránkový web","Custom responsive design":"Responzívny dizajn na mieru","Mobile optimisation":"Optimalizácia pre mobily","Contact form":"Kontaktný formulár","Basic SEO":"Základné SEO","Deployment":"Nasadenie online","Up to 5 pages":"Až 5 stránok","Custom UI/UX":"UI/UX na mieru","Responsive development":"Responzívny vývoj","Contact forms":"Kontaktné formuláre","Basic SEO setup":"Základné nastavenie SEO","Analytics":"Analytika","Performance optimisation":"Optimalizácia výkonu","Up to 10 pages":"Až 10 stránok","Fully custom design":"Úplne individuálny dizajn","Advanced animations":"Pokročilé animácie","CMS where appropriate":"CMS, kde to dáva zmysel","Integrations":"Integrácie","SEO setup":"Nastavenie SEO","Custom storefront":"Vlastný vzhľad obchodu","Product structure":"Štruktúra produktov","Shopping cart":"Nákupný košík","Payment integration":"Integrácia platieb","Checkout":"Pokladňa","Responsive design":"Responzívny dizajn","Custom functionality":"Funkcie na mieru","Web applications":"Webové aplikácie","Dashboards":"Dashboardy","API integrations":"Integrácie API","AI integrations":"Integrácie AI","Advanced workflows":"Pokročilé workflow","Custom development":"Vývoj na mieru","Website updates":"Aktualizácie webu","Content changes":"Zmeny obsahu","Technical maintenance":"Technická údržba","Bug fixes":"Opravy chýb","Performance checks":"Kontrola výkonu","Small improvements":"Drobné vylepšenia","I design and build a single-page website around your idea. It is responsive, fast and published online for you.":"Navrhnem a postavím jednostránkový web podľa vášho nápadu. Je responzívny, rýchly a zverejním ho online.","I build a multi-page website with a custom interface around your business. It covers structure, design, development and launch.":"Postavím viacstránkový web s vlastným rozhraním prispôsobeným vášmu podnikaniu. Zahŕňa štruktúru, dizajn, vývoj aj spustenie.","I create a fully custom website with advanced animations and richer interactions. Where it makes sense, I add a CMS and integrations with the tools you use.":"Vytvorím úplne individuálny web s pokročilými animáciami a bohatšími interakciami. Tam, kde to dáva zmysel, pridám CMS a integrácie s nástrojmi, ktoré používate.","I build an online store with a custom storefront, product structure and checkout. Payments are connected so you can start selling.":"Postavím online obchod s vlastným vzhľadom, štruktúrou produktov a pokladňou. Prepojím platby, aby ste mohli začať predávať.","I develop web applications, dashboards and custom platforms around your requirements. This can include API and AI integrations and advanced workflows.":"Vyvíjam webové aplikácie, dashboardy a vlastné platformy podľa vašich požiadaviek. Môže ísť aj o integrácie API a AI a pokročilé workflow.","Landing pages, personal pages and smaller projects.":"Landing pages, osobné weby a menšie projekty.","Businesses that need a complete, professional web presence.":"Firmy, ktoré potrebujú kompletný profesionálny web.","Brands that want a more customised, distinctive digital experience.":"Značky, ktoré chcú individuálnejší a výraznejší digitálny zážitok.","Businesses ready to sell online.":"Firmy pripravené predávať online.","Complex digital products and ideas that do not fit a standard package.":"Zložité digitálne produkty a nápady, ktoré sa nezmestia do štandardného balíčka."},
+fr:{"nav-home":"Accueil","nav-solutions":"Services","nav-portfolio":"Portfolio","nav-process":"Processus","nav-about":"À propos","nav-contact":"Contact","nav-cta":"Commencer","lang-select":"Choisir la langue",
+"hero-eye":"Collection '26 — Agence Digitale","hl1":"Nous créons","hl2":"des produits","hl3":"numériques","hl4":"qui comptent.","hero-desc":"Sites web, applications web et expériences numériques propulsées par l'IA, par un studio indépendant.","cta1":"Voir les services","cta2":"Nous contacter",
+"mq1":"E-Commerce","mq2":"Web Design","mq3":"Marketing Performance","mq4":"Identité","mq5":"Conversion","mq6":"Apps Web",
+"sol-eye":"Services","sol-head1":"Des offres simples,","sol-head2":"des prix clairs.","sol-sub":"Chaque offre part d'un prix clair. Le devis final dépend de l'ampleur de votre projet.","from":"À partir de","mo":"/ mois","most-pop":"LE PLUS POPULAIRE","details":"Détails","what":"Ce que je fais","best":"Idéal pour","incl":"Inclus","care-note":"Les changements plus importants et les nouvelles fonctionnalités font l'objet d'un devis séparé.","sol-close":"Une qualité professionnelle sans les lourdeurs d'une agence.",
+"t3d-eye":"Technologie","t3d-head1":"Construit avec","t3d-head2":"précision.","t3d-sub":"Chaque projet au plus haut standard technique.","tl1":"Architecture","tl2":"Performance","tl3":"Données","tl4":"Sécurité",
+"pf-eye":"Portfolio","pf-head1":"Des projets","pf-head2":"à visiter.","pf-sub":"Des produits que j'ai conçus et construits moi-même.","pf-own":"Projet personnel","pf-dw":"Streetwear premium pour développeurs, créateurs, fondateurs et builders.","pf-client":"Projets clients sélectionnés","pf-rs":"Concept de plateforme numérique conçue pour rendre la location plus sûre, plus claire et plus transparente pour les locataires et les propriétaires.","pf-fd":"Plateforme de partage de fichiers simple et moderne, conçue pour des transferts rapides, privés et sans effort.","pf-visit":"Visiter le projet",
+"proc-eye":"Comment nous travaillons","proc-head1":"Le","proc-head2":"protocole.","proc-sub":"Un système précis en quatre phases.","ph1":"Phase Un","ph2":"Phase Deux","ph3":"Phase Trois","ph4":"Phase Quatre","proc-t1":"Découverte","proc-d1":"Nous cartographions vos objectifs et concurrence.","proc-t2":"Stratégie","proc-d2":"Architecture de croissance sur mesure.","proc-t3":"Exécution","proc-d3":"Design, dev et lancement en sprints agiles.","proc-t4":"Échelle","proc-d4":"Optimisation continue et tests A/B.",
+"st1":"Projets livrés","st2":"Années d'expérience","st3":"Satisfaction client","st4":"Revenu client moyen",
+"ab-eye":"À propos","ab-head":"La personne derrière Donda.Digital","ab1":"Donda.Digital est un studio numérique indépendant fondé par Adam Donda.","ab2":"Je crée des sites web modernes, des produits numériques et des expériences numériques propulsées par l'IA pour des entreprises, des créateurs et des personnes dont les idées méritent d'être construites.","ab3":"Mon approche associe développement web, UI/UX moderne, outils d'IA et automatisation. Je me concentre sur des produits numériques propres, fonctionnels, rapides et construits autour d'un véritable objectif.","ab4":"Je crois qu'il n'est pas toujours nécessaire d'avoir une grande agence ou un processus compliqué pour construire quelque chose de remarquable.","ab5":"Il faut quelqu'un qui comprend votre idée, communique directement avec vous et prend en charge le projet du premier concept jusqu'au lancement final.","ab6":"C'est tout l'esprit de Donda.Digital.","ab7":"Des idées aux produits numériques.","ab-role":"Fondateur · Donda.Digital",
+"contact-label":"Contact","contact-title-1":"Lancez votre","contact-title-2":"projet.","contact-sub":"Parlez-nous de vos objectifs. Nous répondons sous 24 h avec un plan sur mesure — sans engagement.","field-name":"Nom complet","field-email":"Adresse e-mail","field-website":"Site web","field-package":"Offre","pkg-select":"Choisir une offre (facultatif)","pkg-none":"Pas encore sûr","field-message":"Votre objectif","ph-name":"Votre nom complet","ph-email":"bonjour@votremarque.fr","ph-company":"Entreprise ou site web","ph-message":"Décrivez votre vision et ce à quoi ressemble le succès…","consent":"J'accepte le traitement de mes données conformément à la Politique de confidentialité","form-note":"Vos données sont traitées en toute discrétion.","form-submit":"Envoyer le message","form-error-msg":"Une erreur est survenue. Réessayez ou écrivez-nous directement par e-mail.","success-h":"Message reçu.","success-p":"Nous reviendrons vers vous sous 24 heures avec un plan personnalisé pour votre marque.",
+"avail":"Disponible pour de nouveaux projets","rights":"Tous droits réservés","l-priv":"Politique de confidentialité","l-terms":"Conditions d'utilisation","l-cook":"Cookies","close":"Fermer",
+"For simple landing pages and smaller projects.":"Pour des pages d'atterrissage simples et de petits projets.","For businesses that need a complete professional website.":"Pour les entreprises qui ont besoin d'un site professionnel complet.","For advanced websites and more customised digital experiences.":"Pour des sites avancés et des expériences numériques plus personnalisées.","For businesses ready to sell online.":"Pour les entreprises prêtes à vendre en ligne.","For web applications, custom platforms and complex digital products.":"Pour les applications web, plateformes sur mesure et produits numériques complexes.","For clients who want ongoing support after launch.":"Pour les clients qui souhaitent un accompagnement continu après le lancement.",
+"Start with START":"Commencer avec DÉMARRAGE","Build my website":"Créer mon site","Start a premium project":"Lancer un projet premium","Build my store":"Créer ma boutique","Discuss my project":"Discuter de mon projet","Ask about WEBSITE CARE":"Se renseigner sur le suivi du site","pn-START":"DÉMARRAGE","pn-BUSINESS":"ENTREPRISE","pn-PREMIUM":"PREMIUM","pn-E-COMMERCE":"E-COMMERCE","pn-CUSTOM":"SUR MESURE","pn-WEBSITE CARE":"SUIVI DU SITE","1-page website":"Site d'une page","Custom responsive design":"Design responsive sur mesure","Mobile optimisation":"Optimisation mobile","Contact form":"Formulaire de contact","Basic SEO":"SEO de base","Deployment":"Mise en ligne","Up to 5 pages":"Jusqu'à 5 pages","Custom UI/UX":"UI/UX sur mesure","Responsive development":"Développement responsive","Contact forms":"Formulaires de contact","Basic SEO setup":"Configuration SEO de base","Analytics":"Analytique","Performance optimisation":"Optimisation des performances","Up to 10 pages":"Jusqu'à 10 pages","Fully custom design":"Design entièrement sur mesure","Advanced animations":"Animations avancées","CMS where appropriate":"CMS si pertinent","Integrations":"Intégrations","SEO setup":"Configuration SEO","Custom storefront":"Boutique sur mesure","Product structure":"Structure des produits","Shopping cart":"Panier d'achat","Payment integration":"Intégration des paiements","Checkout":"Paiement (checkout)","Responsive design":"Design responsive","Custom functionality":"Fonctionnalités sur mesure","Web applications":"Applications web","Dashboards":"Tableaux de bord","API integrations":"Intégrations d'API","AI integrations":"Intégrations d'IA","Advanced workflows":"Workflows avancés","Custom development":"Développement sur mesure","Website updates":"Mises à jour du site","Content changes":"Modifications de contenu","Technical maintenance":"Maintenance technique","Bug fixes":"Corrections de bugs","Performance checks":"Contrôles de performance","Small improvements":"Petites améliorations","I design and build a single-page website around your idea. It is responsive, fast and published online for you.":"Je conçois et construis un site d'une page autour de votre idée. Il est responsive, rapide et je le mets en ligne pour vous.","I build a multi-page website with a custom interface around your business. It covers structure, design, development and launch.":"Je construis un site multi-pages avec une interface sur mesure autour de votre activité. Cela couvre la structure, le design, le développement et le lancement.","I create a fully custom website with advanced animations and richer interactions. Where it makes sense, I add a CMS and integrations with the tools you use.":"Je crée un site entièrement sur mesure avec des animations avancées et des interactions plus riches. Si c'est pertinent, j'ajoute un CMS et des intégrations avec vos outils.","I build an online store with a custom storefront, product structure and checkout. Payments are connected so you can start selling.":"Je construis une boutique en ligne avec une vitrine sur mesure, une structure de produits et un paiement. Les paiements sont connectés pour que vous puissiez commencer à vendre.","I develop web applications, dashboards and custom platforms around your requirements. This can include API and AI integrations and advanced workflows.":"Je développe des applications web, des tableaux de bord et des plateformes sur mesure selon vos besoins. Cela peut inclure des intégrations d'API et d'IA et des workflows avancés.","Landing pages, personal pages and smaller projects.":"Pages d'atterrissage, pages personnelles et petits projets.","Businesses that need a complete, professional web presence.":"Entreprises qui ont besoin d'une présence web complète et professionnelle.","Brands that want a more customised, distinctive digital experience.":"Marques qui souhaitent une expérience numérique plus personnalisée et distinctive.","Businesses ready to sell online.":"Entreprises prêtes à vendre en ligne.","Complex digital products and ideas that do not fit a standard package.":"Produits numériques complexes et idées qui ne rentrent pas dans une offre standard."}
+};
+
+const ic=p=>`<svg viewBox="0 0 24 24">${p}</svg>`;
+const IC={'START':ic('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/>'),
+'BUSINESS':ic('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 14l-2 2 2 2M15 14l2 2-2 2"/>'),
+'PREMIUM':ic('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'),
+'E-COMMERCE':ic('<path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 016 0"/>'),
+'CUSTOM':ic('<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>'),
+'WEBSITE CARE':ic('<path d="M20 12a8 8 0 11-2.3-5.6M20 4v4h-4"/>')};
+const CZK_RATE=25; // display rate: 1 EUR = 25 CZK (set to 1 for a 1:1 relabel)
+function fmt(eur,plus){
+  const cz=L==='cs',v=cz?Math.round(eur*CZK_RATE):eur,pl=plus?'+':'';
+  if(L==='en')return '€'+String(v).replace(/\B(?=(\d{3})+(?!\d))/g,',')+pl;
+  return String(v).replace(/\B(?=(\d{3})+(?!\d))/g,'\u00a0')+pl+'\u00a0'+(cz?'Kč':'€');
+}
+/* ========= PACKAGES (EUR, "from" pricing) ========= */
+const PK=[
+{id:'START',p:350,d:'For simple landing pages and smaller projects.',c:'Start with START',w:'I design and build a single-page website around your idea. It is responsive, fast and published online for you.',b:'Landing pages, personal pages and smaller projects.',f:['1-page website','Custom responsive design','Mobile optimisation','Contact form','Basic SEO','Deployment']},
+{id:'BUSINESS',p:750,pop:1,d:'For businesses that need a complete professional website.',c:'Build my website',w:'I build a multi-page website with a custom interface around your business. It covers structure, design, development and launch.',b:'Businesses that need a complete, professional web presence.',f:['Up to 5 pages','Custom UI/UX','Responsive development','Contact forms','Basic SEO setup','Analytics','Performance optimisation','Deployment']},
+{id:'PREMIUM',p:1200,d:'For advanced websites and more customised digital experiences.',c:'Start a premium project',w:'I create a fully custom website with advanced animations and richer interactions. Where it makes sense, I add a CMS and integrations with the tools you use.',b:'Brands that want a more customised, distinctive digital experience.',f:['Up to 10 pages','Fully custom design','Advanced animations','CMS where appropriate','Integrations','SEO setup','Analytics','Performance optimisation','Deployment']},
+{id:'E-COMMERCE',p:1500,d:'For businesses ready to sell online.',c:'Build my store',w:'I build an online store with a custom storefront, product structure and checkout. Payments are connected so you can start selling.',b:'Businesses ready to sell online.',f:['Custom storefront','Product structure','Shopping cart','Payment integration','Checkout','Responsive design','Analytics','Deployment']},
+{id:'CUSTOM',p:2000,plus:1,d:'For web applications, custom platforms and complex digital products.',c:'Discuss my project',w:'I develop web applications, dashboards and custom platforms around your requirements. This can include API and AI integrations and advanced workflows.',b:'Complex digital products and ideas that do not fit a standard package.',f:['Custom functionality','Web applications','Dashboards','API integrations','AI integrations','Advanced workflows','Custom development']}
+];
+const CARE={id:'WEBSITE CARE',p:100,d:'For clients who want ongoing support after launch.',c:'Ask about WEBSITE CARE',f:['Website updates','Content changes','Technical maintenance','Bug fixes','Performance checks','Small improvements']};
+
+/* ========= LEGAL (templates, English; placeholders highlighted) ========= */
+const LEGAL={
+privacy:[
+["Controller","Adam Donda, trading as Donda.Digital (independent studio). Contact: donda.digital@gmail.com. Address and business ID / VAT details are provided on request and on quotes and invoices."],
+["Data we collect","Through the contact form we collect only what you enter: your name, email address, website or company, your message and the package you select."],
+["How it is processed","Form submissions are processed by Formspree, which receives them and forwards them to us by email. Formspree may process data outside the EEA under its own safeguards; please see its privacy policy."],
+["Purpose and legal basis","We use your data only to answer your enquiry and to prepare a quote or proposal. The legal basis is your consent (Art. 6(1)(a) GDPR), given by ticking the checkbox, and steps taken at your request before entering a contract (Art. 6(1)(b) GDPR)."],
+["Retention","Enquiries are kept only as long as needed to handle them and, if a contract follows, for the duration of the contract and any legal retention periods. Inactive enquiries are deleted within 24 months of the last contact."],
+["Your rights","You have the right to access, rectification, erasure and restriction of your data, to object to processing, to withdraw your consent at any time, and to lodge a complaint with your national data protection supervisory authority (in the Czech Republic: Úřad pro ochranu osobních údajů, uoou.gov.cz)."],
+["Contact","To exercise your rights, write to donda.digital@gmail.com."]],
+terms:[
+["Scope of services","Donda.Digital provides web design, web development and related digital services as described in a written quote or agreement for each project. Anything outside the agreed scope is quoted separately."],
+["Quotes and 'from' pricing","Prices on this website are starting prices ('from') in EUR and are not a binding offer. A final quote is prepared after your requirements are discussed. Taxes are added where applicable."],
+["Payment","Payment terms, deposits and milestones are set out in the quote or agreement. As a rule, a deposit is due before work starts and the balance on delivery, unless the quote states otherwise."],
+["Revisions","The number of revision rounds included is stated in the quote. Additional revisions or changes in scope may be charged separately."],
+["Intellectual property","Ownership of the final deliverables passes to the client after full payment. Until then, all rights remain with Adam Donda (Donda.Digital). Third-party components keep their own licences."],
+["Limitation of liability","To the extent permitted by law, liability is limited to the amount paid for the affected service, and there is no liability for indirect or consequential loss. Nothing limits liability that cannot be limited by law."],
+["Governing law","These terms are governed by the laws of the Czech Republic, and disputes are subject to the competent Czech courts, without prejudice to mandatory consumer rights. Operator: Adam Donda, trading as Donda.Digital, donda.digital@gmail.com."]],
+cookies:[
+["Cookies","This website does not set any cookies of its own."],
+["Local storage","Your chosen language is stored in your browser's localStorage (key: donda_lang) so it can be remembered on your next visit. It is not used for tracking and is not sent to us."],
+["Analytics and tracking","No analytics, advertising or tracking tools are installed, so no cookie banner is shown."],
+["Third-party resources","To display the page, your browser loads fonts from Google Fonts and a script library from cdnjs; these providers may receive technical data such as your IP address. When you send the contact form, the data goes to Formspree (see the Privacy Policy)."],
+["Contact","Questions: donda.digital@gmail.com. Operator: Adam Donda, trading as Donda.Digital."]]
+};
+const LTITLE={privacy:'l-priv',terms:'l-terms',cookies:'l-cook'};
+
+/* ========= APP ========= */
+let L='en';
+try{const s=localStorage.getItem('donda_lang');if(s&&T[s])L=s;}catch(e){}
+const t=k=>(T[L]&&T[L][k])||T.en[k]||k;
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let openId=null,firstRender=true,legalKey=null,lastFocus=null;
+
+  /* LOADER */
+  const words=['Build','Create','Design','Launch'];
+  const lw=document.getElementById('l-word'),lc=document.getElementById('l-count'),lb=document.getElementById('l-bar'),le=document.getElementById('loader');
+  const sts=['ls0','ls1','ls2'];let progress=0,wi=0;
+  const li=setInterval(()=>{
+    progress+=100/40;if(progress>=100)progress=100;
+    lb.style.width=progress+'%';lc.textContent=String(Math.floor(progress)).padStart(3,'0');
+    const si=Math.min(2,Math.floor(progress/35));
+    sts.forEach((id,i)=>document.getElementById(id).classList.toggle('on',i<=si));
+    if(progress>=100){clearInterval(li);setTimeout(()=>{le.style.transition='opacity .6s,transform .6s';le.style.opacity='0';le.style.transform='translateY(-2%)';setTimeout(()=>le.style.display='none',650)},250)}
+  },50);
+  const wInt=setInterval(()=>{
+    lw.style.opacity='0';lw.style.transform='translate(-50%,-60%)';
+    setTimeout(()=>{wi=(wi+1)%words.length;lw.textContent=words[wi];lw.style.opacity='1';lw.style.transform='translate(-50%,-50%)'},280);
+  },500);
+  setTimeout(()=>clearInterval(wInt),2200);
+
+  /* NAV SCROLL + PROGRESS */
+  const nav=document.getElementById('nav'),prog=document.getElementById('prog'),pf=document.getElementById('proc-fill'),ps=document.querySelectorAll('.proc-step');
+  function onScroll(){
+    const sc=window.scrollY,total=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.width=(sc/total*100)+'%';nav.classList.toggle('scrolled',sc>30);
+    const pe=document.querySelector('.proc-steps');
+    if(pe&&pf){
+      const r=pe.getBoundingClientRect(),vh=window.innerHeight,start=vh*.7,end=-r.height+vh*.3;
+      pf.style.height=(Math.max(0,Math.min(1,(start-r.top)/(start-end)))*100)+'%';
+      ps.forEach(st=>st.classList.toggle('reached',st.getBoundingClientRect().top<vh*.6));
+    }
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+  /* REVEAL + COUNT-UP */
+  function count(numEl){
+    if(numEl.dataset.done)return;numEl.dataset.done='1';
+    const target=parseInt(numEl.dataset.target),suf=numEl.dataset.suffix||'',pre=numEl.dataset.prefix||'';
+    if(reduce){numEl.textContent=pre+target+suf;return}
+    let cur=0;const step=Math.max(1,Math.floor(target/40));
+    const ci=setInterval(()=>{cur+=step;if(cur>=target){cur=target;clearInterval(ci)}numEl.textContent=pre+cur+suf},35);
+  }
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('vis');
+      if(e.target.classList.contains('stat-item')){const n=e.target.querySelector('[data-target]');if(n)count(n)}}
+  })},{threshold:.18});
+  document.querySelectorAll('.reveal, .stat-item').forEach(el=>io.observe(el));
+
+  /* PACKAGES */
+  const grid=document.getElementById('pk-grid'),careEl=document.getElementById('pk-care');
+  function renderPk(){
+    const cls=firstRender?'reveal':'reveal vis';
+    grid.innerHTML=PK.map((k,i)=>`<article class="sol-card pk ${cls} d${i%3+1}${k.pop?' pop':''}${openId===k.id?' open':''}">
+${k.pop?`<div class="badge-pop">${t('most-pop')}</div>`:''}
+<button type="button" class="pk-head" id="pb${i}" aria-expanded="${openId===k.id}" aria-controls="pp${i}" data-id="${k.id}">
+<span class="sol-num">0${i+1} — ${t('pn-'+k.id)}</span><span class="sol-icon" aria-hidden="true">${IC[k.id]}</span><span class="sol-title">${t('pn-'+k.id)}</span>
+<span class="sol-price"><span>${t('from')}</span><span class="sol-price-num">${fmt(k.p,k.plus)}</span></span>
+<span class="sol-desc">${t(k.d)}</span>
+<span class="pk-tg"><span>${t('details')}</span><span class="pk-ic" aria-hidden="true"></span></span></button>
+<div class="pk-panel" id="pp${i}" role="region" aria-labelledby="pb${i}"><div class="pk-in">
+<h4>${t('what')}</h4><p>${t(k.w)}</p><h4>${t('best')}</h4><p>${t(k.b)}</p><h4>${t('incl')}</h4>
+<ul class="sol-feats">${k.f.map((x,j)=>`<li style="--i:${j}">${t(x)}</li>`).join('')}</ul></div></div>
+<div class="sol-cta-wrap"><a href="#contact" class="btn ${k.pop?'btn-primary':'btn-outline'} btn-sm" data-pkg="${k.id}"><span>${t(k.c)}</span><span class="arr">→</span></a></div></article>`).join('');
+    careEl.innerHTML=`<article class="sol-card care ${cls}"><div><div class="sol-num">+ — ${t('pn-'+CARE.id)}</div><div class="sol-icon" aria-hidden="true">${IC[CARE.id]}</div>
+<div class="sol-price"><span>${t('from')}</span><span class="sol-price-num">${fmt(CARE.p)} ${t('mo')}</span></div>
+<p class="sol-desc">${t(CARE.d)}</p><p class="care-note">${t('care-note')}</p>
+<a href="#contact" class="btn btn-outline btn-sm" data-pkg="${CARE.id}"><span>${t(CARE.c)}</span><span class="arr">→</span></a></div>
+<ul class="sol-feats">${CARE.f.map(x=>`<li>${t(x)}</li>`).join('')}</ul></article>`;
+    if(firstRender){grid.querySelectorAll('.reveal').forEach(el=>io.observe(el));careEl.querySelectorAll('.reveal').forEach(el=>io.observe(el));firstRender=false}
+  }
+  grid.addEventListener('click',e=>{
+    const b=e.target.closest('.pk-head');if(!b)return;
+    const id=b.dataset.id,was=openId===id;openId=was?null:id;
+    grid.querySelectorAll('.pk').forEach(c=>{
+      const h=c.querySelector('.pk-head'),on=h.dataset.id===openId;
+      c.classList.toggle('open',on);h.setAttribute('aria-expanded',on);
+    });
+  });
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a[data-pkg]');if(!a)return;
+    const sel=document.getElementById('f-pkg');if(sel)sel.value=a.dataset.pkg;
+  });
+
+  /* LEGAL MODAL */
+  const lg=document.getElementById('legal'),lgT=document.getElementById('lg-title'),lgB=document.getElementById('lg-body'),lgC=document.getElementById('lg-close');
+  function fillLegal(){
+    if(!legalKey)return;
+    lgT.textContent=t(LTITLE[legalKey]);
+    lgB.innerHTML=LEGAL[legalKey].map(([h,p])=>`<h3>${h}</h3><p>${p.replace(/\[[^\]]+\]/g,m=>`<mark>${m}</mark>`)}</p>`).join('');
+  }
+  function openLegal(k){legalKey=k;lastFocus=document.activeElement;fillLegal();lg.classList.add('open');lg.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';lgC.focus()}
+  function closeLegal(){lg.classList.remove('open');lg.setAttribute('aria-hidden','true');document.body.style.overflow='';legalKey=null;if(lastFocus)lastFocus.focus()}
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-legal]');if(b)openLegal(b.dataset.legal)});
+  lgC.addEventListener('click',closeLegal);
+  lg.addEventListener('click',e=>{if(e.target===lg)closeLegal()});
+  document.addEventListener('keydown',e=>{
+    if(!lg.classList.contains('open'))return;
+    if(e.key==='Escape')closeLegal();
+    if(e.key==='Tab'){e.preventDefault();lgC.focus()}
+  });
+
+  /* LANGUAGE */
+  function applyLang(lang){
+    if(!T[lang])lang='en';L=lang;
+    try{localStorage.setItem('donda_lang',lang)}catch(e){}
+    document.documentElement.setAttribute('lang',lang);
+    document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.getAttribute('data-i18n'))});
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.setAttribute('placeholder',t(el.getAttribute('data-i18n-placeholder'))));
+    document.getElementById('lang-cur').textContent=lang.toUpperCase();
+    document.querySelectorAll('.lang-opt').forEach(o=>o.classList.toggle('active',o.dataset.lang===lang));
+    renderPk();fillLegal();
+  }
+  const langBtn=document.getElementById('lang-btn'),langDrawer=document.getElementById('lang-drawer');
+  function setDrawer(on){langBtn.classList.toggle('open',on);langDrawer.classList.toggle('open',on);langBtn.setAttribute('aria-expanded',on)}
+  langBtn.addEventListener('click',e=>{e.stopPropagation();setDrawer(!langDrawer.classList.contains('open'))});
+  document.addEventListener('click',e=>{if(!langBtn.contains(e.target)&&!langDrawer.contains(e.target))setDrawer(false)});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')setDrawer(false)});
+  document.querySelectorAll('.lang-opt').forEach(o=>o.addEventListener('click',()=>{applyLang(o.dataset.lang);setDrawer(false)}));
+  applyLang(L);
+  const nt=document.getElementById('nav-toggle'),nl=document.getElementById('nav-links');
+  function setMenu(on){nl.classList.toggle('open',on);nt.setAttribute('aria-expanded',on)}
+  nt.addEventListener('click',e=>{e.stopPropagation();setMenu(!nl.classList.contains('open'))});
+  nl.addEventListener('click',e=>{if(e.target.closest('a'))setMenu(false)});
+  document.addEventListener('click',e=>{if(!nl.contains(e.target)&&!nt.contains(e.target))setMenu(false)});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')setMenu(false)});
+  window.addEventListener('resize',()=>{if(innerWidth>960)setMenu(false)});
+
+  /* 3D */
+  if(window.THREE){initPlanet();initTech()}
+  else{const wt=setInterval(()=>{if(window.THREE){clearInterval(wt);initPlanet();initTech()}},100)}
+
+  /* FORM (Formspree) */
+  const form=document.getElementById('contactForm'),fs=document.getElementById('form-success'),fe=document.getElementById('form-error'),sb=document.getElementById('form-submit-btn');
+  if(form){
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();fe.classList.remove('show');sb.setAttribute('disabled','');
+      const orig=sb.innerHTML;sb.innerHTML='<span>Sending…</span>';
+      const data=new FormData(form);
+      try{
+        const res=await fetch(form.action,{method:'POST',body:data,headers:{'Accept':'application/json'}});
+        if(res.ok){form.style.display='none';fs.classList.add('show')}else throw new Error('Bad response');
+      }catch(err){fe.classList.add('show');sb.removeAttribute('disabled');sb.innerHTML=orig}
+    });
+  }
+});
+
+/* ========= HERO PLANET ========= */
+function initPlanet(){
+  const canvas=document.getElementById('planet-cv');if(!canvas)return;
+  const wrap=canvas.parentElement,w=()=>wrap.clientWidth,h=()=>wrap.clientHeight;
+  const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(38,w()/h(),.1,100);cam.position.set(0,.3,5.5);
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(w(),h(),false);
+  scene.add(new THREE.AmbientLight(0xffffff,.35));
+  const key=new THREE.DirectionalLight(0xffffff,1.1);key.position.set(4,3,5);scene.add(key);
+  const rim=new THREE.DirectionalLight(0xaaaaaa,.5);rim.position.set(-4,2,-3);scene.add(rim);
+  const fill=new THREE.PointLight(0xffffff,.3);fill.position.set(0,-3,3);scene.add(fill);
+  const grp=new THREE.Group();
+  grp.add(new THREE.Mesh(new THREE.SphereGeometry(1.55,40,40),new THREE.MeshBasicMaterial({color:0x1a1a1a,wireframe:true,transparent:true,opacity:.18})));
+  grp.add(new THREE.Mesh(new THREE.SphereGeometry(1.5,96,96),new THREE.MeshStandardMaterial({color:0x0a0a0a,metalness:.75,roughness:.35,emissive:0x000000})));
+  grp.add(new THREE.Mesh(new THREE.SphereGeometry(1.51,64,64),new THREE.MeshStandardMaterial({color:0x2a2a2a,metalness:.9,roughness:.15,transparent:true,opacity:.4})));
+  const ring1=new THREE.Mesh(new THREE.TorusGeometry(2.05,.006,8,96),new THREE.MeshBasicMaterial({color:0x0a0a0a,transparent:true,opacity:.35}));ring1.rotation.x=Math.PI/2.2;grp.add(ring1);
+  const ring2=new THREE.Mesh(new THREE.TorusGeometry(2.35,.004,8,96),new THREE.MeshBasicMaterial({color:0x1a1a1a,transparent:true,opacity:.22}));ring2.rotation.x=Math.PI/3;ring2.rotation.y=Math.PI/4;grp.add(ring2);
+  const nodes=[],nm=new THREE.MeshBasicMaterial({color:0x0a0a0a});
+  for(let i=0;i<12;i++){const n=new THREE.Mesh(new THREE.SphereGeometry(.028,10,10),nm),a=(i/12)*Math.PI*2,r=1.85+Math.sin(i)*.1;n.position.set(Math.cos(a)*r,Math.sin(i*1.3)*.35,Math.sin(a)*r);nodes.push(n);grp.add(n)}
+  scene.add(grp);
+  let tx=0,ty=0,cx=0,cy=0;
+  wrap.addEventListener('mousemove',e=>{const r=wrap.getBoundingClientRect();tx=((e.clientX-r.left)/r.width-.5)*.5;ty=((e.clientY-r.top)/r.height-.5)*.3});
+  wrap.addEventListener('mouseleave',()=>{tx=0;ty=0});
+  function onR(){cam.aspect=w()/h();cam.updateProjectionMatrix();renderer.setSize(w(),h(),false)}
+  window.addEventListener('resize',onR);onR();
+  let t=0;
+  (function anim(){
+    t+=.005;cx+=(tx-cx)*.06;cy+=(ty-cy)*.06;
+    grp.rotation.y=t+cx;grp.rotation.x=Math.sin(t*.5)*.1+cy;ring1.rotation.z=t*1.2;ring2.rotation.z=-t*.9;
+    nodes.forEach((n,i)=>{const a=(i/nodes.length)*Math.PI*2+t,r=1.85+Math.sin(t+i)*.08;n.position.x=Math.cos(a)*r;n.position.z=Math.sin(a)*r});
+    renderer.render(scene,cam);requestAnimationFrame(anim);
+  })();
+}
+
+/* ========= TECH PLANET ========= */
+function initTech(){
+  const canvas=document.getElementById('t3d-cv');if(!canvas)return;
+  const wrap=canvas.parentElement,w=()=>wrap.clientWidth,h=()=>wrap.clientHeight;
+  const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,w()/h(),.1,100);cam.position.z=5.2;
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(w(),h(),false);
+  scene.add(new THREE.AmbientLight(0xffffff,.5));
+  const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(3,2,4);scene.add(dl);
+  const dl2=new THREE.DirectionalLight(0xaaaaaa,.4);dl2.position.set(-3,-1,2);scene.add(dl2);
+  const grp=new THREE.Group();
+  grp.add(new THREE.Mesh(new THREE.SphereGeometry(1.55,40,40),new THREE.MeshBasicMaterial({color:0x0a0a0a,wireframe:true,transparent:true,opacity:.15})));
+  grp.add(new THREE.Mesh(new THREE.SphereGeometry(1.5,96,96),new THREE.MeshStandardMaterial({color:0x0a0a0a,metalness:.7,roughness:.3})));
+  const ring1=new THREE.Mesh(new THREE.TorusGeometry(2.1,.005,8,96),new THREE.MeshBasicMaterial({color:0x0a0a0a,transparent:true,opacity:.3}));ring1.rotation.x=Math.PI/2.2;grp.add(ring1);
+  const ring2=new THREE.Mesh(new THREE.TorusGeometry(2.5,.003,8,96),new THREE.MeshBasicMaterial({color:0x1a1a1a,transparent:true,opacity:.2}));ring2.rotation.x=Math.PI/3;ring2.rotation.y=Math.PI/4;grp.add(ring2);
+  const nodes=[],nm=new THREE.MeshBasicMaterial({color:0x0a0a0a});
+  for(let i=0;i<14;i++){const n=new THREE.Mesh(new THREE.SphereGeometry(.03,10,10),nm),a=(i/14)*Math.PI*2,r=1.9+Math.sin(i)*.12;n.position.set(Math.cos(a)*r,Math.sin(i*1.3)*.4,Math.sin(a)*r);nodes.push(n);grp.add(n)}
+  scene.add(grp);
+  function onR(){cam.aspect=w()/h();cam.updateProjectionMatrix();renderer.setSize(w(),h(),false)}
+  window.addEventListener('resize',onR);onR();
+  let t=0;
+  (function anim(){
+    t+=.005;grp.rotation.y=t;grp.rotation.x=Math.sin(t*.5)*.12;ring1.rotation.z=t*1.3;ring2.rotation.z=-t;
+    nodes.forEach((n,i)=>{const a=(i/nodes.length)*Math.PI*2+t,r=1.9+Math.sin(t+i)*.1;n.position.x=Math.cos(a)*r;n.position.z=Math.sin(a)*r});
+    renderer.render(scene,cam);requestAnimationFrame(anim);
+  })();
+}
+</script>
+
+<script>
+/* ========= THEME TOGGLE (Light / Dark) ========= */
+(function(){
+  var root=document.documentElement,btn=document.getElementById('theme-toggle');
+  if(!btn)return;
+  function sync(){btn.setAttribute('aria-checked',root.getAttribute('data-theme')==='dark'?'true':'false')}
+  sync();
+  btn.addEventListener('click',function(){
+    var dark=root.getAttribute('data-theme')==='dark';
+    if(dark)root.removeAttribute('data-theme');else root.setAttribute('data-theme','dark');
+    try{localStorage.setItem('donda_theme',dark?'light':'dark')}catch(e){}
+    sync();
+  });
+})();
+</script>
+</body>
+</html>
