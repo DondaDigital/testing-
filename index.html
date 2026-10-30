@@ -316,6 +316,35 @@ footer{border-top:1px solid var(--line);padding:44px 0 22px;background:var(--bg)
 .ccacts .btn{flex:1 1 140px;width:auto}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}.rv{opacity:1;transform:none}}
 </style>
+<style id="src-css">
+/* vysouvací anketa „Odkud jste se o nás dozvěděli?“ */
+.src{position:fixed;right:16px;bottom:16px;z-index:80;width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 32px);overflow:auto;background:var(--bg);color:var(--fg);border:1px solid var(--line);box-shadow:0 18px 50px -20px rgba(0,0,0,.35);padding:16px 16px 10px;opacity:0;transform:translateY(18px);pointer-events:none;transition:opacity .4s,transform .5s var(--ease)}
+.src[hidden]{display:none}
+.src.on{opacity:1;transform:none;pointer-events:auto}
+body:has(#drawer.on,.modal.on,#xg.on,#ccb.on) .src{opacity:0;pointer-events:none}
+.src-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.src h2{font-size:15px;font-weight:600;line-height:1.3;padding-top:3px}
+.src-x{width:34px;height:34px;margin:-6px -8px 0 0;display:grid;place-items:center;flex:none}
+.src-x svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;transition:transform .3s var(--ease)}
+.src-x:hover svg{transform:rotate(90deg)}
+.src fieldset{border:0;min-width:0}
+.src-opt{display:block;position:relative}
+.src-opt input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.src-opt span{display:flex;align-items:center;gap:12px;padding:7px 12px;margin-bottom:4px;border:1px solid var(--line);font-size:14px;line-height:1.3;transition:border-color .2s}
+.src-opt span::before{content:"";flex:none;width:12px;height:12px;border-radius:50%;border:1px solid var(--fg);transition:background .2s,box-shadow .2s}
+.src-opt:hover span,.src-opt input:checked+span{border-color:var(--fg)}
+.src-opt input:checked+span::before{background:var(--fg);box-shadow:inset 0 0 0 2px #fff}
+.src-opt input:focus-visible+span{outline:2px solid var(--fg);outline-offset:2px}
+.src-o{display:grid;gap:8px;margin:2px 0 6px}
+.src-o[hidden]{display:none}
+.src-o input{border:1px solid var(--line);padding:10px 12px;font-size:14px;outline:0;background:#fff;transition:border-color .2s}
+.src-o input:focus{border-color:var(--fg)}
+.src-o .btn{padding:11px 16px;font-size:14px}
+.src-t{padding:4px 0 8px;font-size:14px}
+.src-t[hidden]{display:none}
+@media(max-width:560px){.src{left:12px;right:12px;width:auto;bottom:calc(12px + env(safe-area-inset-bottom));max-height:calc(100vh - 24px)}}
+@supports (height:100dvh){.src{max-height:calc(100dvh - 32px)}@media(max-width:560px){.src{max-height:calc(100dvh - 24px)}}}
+</style>
 <link rel="stylesheet" href="extra-gallery.css">
 </head>
 <body>
@@ -438,11 +467,6 @@ footer{border-top:1px solid var(--line);padding:44px 0 22px;background:var(--bg)
 </footer>
 
 <section class="xg" id="xg" aria-hidden="true" aria-label="EXTRA GALLERY" data-testid="extra-gallery-page">
-  <svg class="xg-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs>
-    <linearGradient id="xgShade" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".26"/><stop offset=".2" stop-color="#000" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".1"/><stop offset=".8" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient>
-    <linearGradient id="xgShadeV" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".1"/><stop offset=".25" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient>
-    <linearGradient id="xgWood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5a4235"/><stop offset="1" stop-color="#2a1b14"/></linearGradient>
-  </defs></svg>
   <div class="xg-top">
     <h2 class="xg-title">EXTRA GALLERY</h2>
     <button class="xg-close" id="xgClose" type="button" aria-label="Zavřít galerii" data-testid="extra-gallery-close"><span data-xgt="close"></span> <span aria-hidden="true">✕</span></button>
@@ -450,8 +474,10 @@ footer{border-top:1px solid var(--line);padding:44px 0 22px;background:var(--bg)
   <div class="xg-main">
     <div class="xg-stage" id="xgStage" data-testid="xg-stage">
       <div class="xg-rack" id="xgRack" data-testid="xg-rack"></div>
+      <button class="xg-snav prev" id="xgSPrev" type="button" aria-label="Předchozí" data-testid="xg-stage-prev"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+      <button class="xg-snav next" id="xgSNext" type="button" aria-label="Další" data-testid="xg-stage-next"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       <div class="xg-cap" id="xgCap" aria-live="polite">
-        <b id="xgCapName"></b><span id="xgCapPrice"></span>
+        <b id="xgCapName"></b><span id="xgCapKind"></span><span id="xgCapPrice"></span>
         <button class="xg-pill" id="xgCapBtn" type="button" data-xgt="view" data-testid="xg-view-button"></button>
       </div>
       <p class="xg-hint" data-xgt="hint"></p>
@@ -460,20 +486,9 @@ footer{border-top:1px solid var(--line);padding:44px 0 22px;background:var(--bg)
       <button class="xg-back" id="xgBack" type="button" data-testid="xg-back-button">← <span data-xgt="backRack"></span></button>
       <button class="xg-nav prev" id="xgPrev" type="button" aria-label="Předchozí" data-testid="xg-prev"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
       <button class="xg-nav next" id="xgNext" type="button" aria-label="Další" data-testid="xg-next"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-      <div class="xg-box" id="xgBox">
-        <div class="xg-ghost l" id="xgGL" aria-hidden="true"></div>
-        <div class="xg-ghost r" id="xgGR" aria-hidden="true"></div>
-        <button class="xg-fig" id="xgFig" type="button" aria-label="Otočit kousek" data-testid="xg-flip-button">
-          <span class="xg-shadow" aria-hidden="true"></span>
-          <span class="xg-flip" id="xgFlip"><span class="xg-face f" id="xgFront"></span><span class="xg-face b" id="xgBackF"></span></span>
-        </button>
-        <div class="xg-tags" id="xgTags" role="group"></div>
-      </div>
+      <button class="xg-dimg" id="xgDImg" type="button" data-testid="xg-detail-image"><img id="xgDImgEl" src="" alt="" width="1145" height="1374" decoding="async" draggable="false" onerror="if(this.dataset.alt&&!this.dataset.f){this.dataset.f=1;this.src=this.dataset.alt}"></button>
       <h3 class="xg-name" id="xgName" data-testid="xg-product-name"></h3>
-      <div class="xg-seg" id="xgSeg" role="group">
-        <button type="button" data-side="front" aria-pressed="true" data-xgt="sideF" data-testid="xg-side-front"></button>
-        <button type="button" data-side="back" aria-pressed="false" data-xgt="sideB" data-testid="xg-side-back"></button>
-      </div>
+      <p class="xg-kind" id="xgKind"></p>
       <div class="xg-price" id="xgPrice" data-testid="xg-product-price"></div>
       <button class="xg-buy" id="xgBuy" type="button" data-testid="xg-buy-button"><span data-xgt="buy"></span> ↗</button>
     </div>
@@ -585,6 +600,8 @@ footer{border-top:1px solid var(--line);padding:44px 0 22px;background:var(--bg)
   </div>
 </div>
 
+<aside class="src" id="srcPanel" role="dialog" aria-labelledby="srcH" aria-hidden="true" hidden data-testid="source-panel"></aside>
+
 <!-- ===== Volitelné skripty (analytika / marketing) =====
      Vkládejte je VÝHRADNĚ takto – spustí se až po udělení souhlasu v příslušné kategorii:
 <script type="text/plain" data-consent="analytics" src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
@@ -684,6 +701,7 @@ Podpis (pouze při listinné formě) a datum: ____________</p>
 <tr><td>tmk_consent</td><td>nezbytné</td><td>uložení vaší volby souhlasu</td><td>12 měsíců</td></tr>
 <tr><td>tmk_cart</td><td>nezbytné</td><td>obsah nákupní tašky a zvolená doprava</td><td>do vyprázdnění košíku / smazání prohlížeče</td></tr>
 <tr><td>tmk_lang, tmk_cur</td><td>preferenční</td><td>zapamatování jazyka a měny</td><td>do odvolání souhlasu</td></tr>
+<tr><td>tmk_src</td><td>preferenční</td><td>zapamatování, že jste odpověděli na otázku „Odkud jste se o nás dozvěděli?“ nebo ji zavřeli</td><td>do 30 dnů / do odvolání souhlasu</td></tr>
 <tr><td><span class="phx">[DOPLNIT]</span></td><td>analytické</td><td>měření návštěvnosti – <b>aktuálně nepoužíváno</b></td><td>–</td></tr>
 <tr><td><span class="phx">[DOPLNIT]</span></td><td>marketingové</td><td>reklama a remarketing – <b>aktuálně nepoužíváno</b></td><td>–</td></tr>
 </table>
@@ -798,6 +816,7 @@ Signature (only for paper form) and date: ____________</p>
 <tr><td>tmk_consent</td><td>necessary</td><td>stores your consent choice</td><td>12 months</td></tr>
 <tr><td>tmk_cart</td><td>necessary</td><td>shopping bag contents and chosen shipping</td><td>until the bag is emptied / browser data is cleared</td></tr>
 <tr><td>tmk_lang, tmk_cur</td><td>preferences</td><td>remembers language and currency</td><td>until consent is withdrawn</td></tr>
+<tr><td>tmk_src</td><td>preferences</td><td>remembers that you answered or closed the "How did you hear about us?" question</td><td>up to 30 days / until consent is withdrawn</td></tr>
 <tr><td><span class="phx">[TO BE ADDED]</span></td><td>analytics</td><td>traffic measurement – <b>currently not used</b></td><td>–</td></tr>
 <tr><td><span class="phx">[TO BE ADDED]</span></td><td>marketing</td><td>advertising and remarketing – <b>currently not used</b></td><td>–</td></tr>
 </table>
@@ -828,8 +847,12 @@ Signature (only for paper form) and date: ____________</p>
 // EUR 25 je převzato z původního kódu; USD 23 je ZÁSTUPNÁ HODNOTA – upravte podle aktuálního kurzu.
 const RATES = {CZK:1, EUR:25, USD:23};
 const CURRENCIES = ["CZK","EUR","USD"];
-const SLIDES = [                     // img = cesta/URL fotky banneru
-  {img:"banner1.png"},{img:"banner2.png"},{img:"banner3.png"}
+// Názvy souborů v repozitáři jsou uložené s rozloženou diakritikou (NFD). asset() zkusí NFD, při chybě načtení se použije složený tvar (NFC).
+const asset=n=>encodeURI(String(n).normalize("NFD"));
+const SLIDES = [                     // img = přesný název souboru banneru; fit/pos = individuální object-fit / object-position
+  {img:"Minimalist E-shop oznámení TEMNAK.png",alt:{cs:"TEMNAK – e-shop již brzy",en:"TEMNAK – e-shop coming soon"},fit:"cover",pos:"50% 50%"},
+  {img:"TEMNAK_ E-shop brzy spuštěn.png",alt:{cs:"TEMNAK – e-shop již brzy",en:"TEMNAK – e-shop coming soon"},fit:"cover",pos:"50% 50%"},
+  {img:"Temnak_ E-shop již brzy.png",alt:{cs:"TEMNAK – e-shop již brzy",en:"TEMNAK – e-shop coming soon"},fit:"cover",pos:"50% 50%"}
 ];
 // Texty (name, label, title, text, carrier) lze zadat jako řetězec, nebo jako {cs:"…",en:"…"} pro obě jazykové mutace.
 // Kategorie levého menu (pořadí = pořadí v menu). id se používá v URL (?kat=) a u produktů (cat).
@@ -963,7 +986,7 @@ function buildHero(){
     const a=document.createElement("a");
     a.href="#shop";a.className="slide"+(i===slide?" on":"");
     a.setAttribute("role","group");a.setAttribute("aria-label",(i+1)+" / "+SLIDES.length);
-    a.innerHTML=s.img?`<img src="${s.img}" alt="TEMNAK" ${i?'loading="lazy"':""}>`:`<div class="ph">${t("ph")} ${i+1}</div>`;
+    a.innerHTML=s.img?`<img src="${asset(s.img)}" data-alt="${encodeURI(String(s.img).normalize("NFC"))}" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.dataset.alt}" alt="${L(s.alt)||"TEMNAK"}" width="1983" height="793" decoding="async" style="object-fit:${s.fit||"cover"};object-position:${s.pos||"50% 50%"}" ${i?'loading="lazy"':'fetchpriority="high"'}>`:`<div class="ph">${t("ph")} ${i+1}</div>`;
     $("#hero").insertBefore(a,ctrl);
   });
   $("#cnt").textContent=(slide+1)+" / "+SLIDES.length;
@@ -1260,6 +1283,96 @@ catSel=CATEGORIES.some(c=>c.id===catFromUrl())?catFromUrl():"all";
 applyLang();restart();
 if(consent)activateScripts();else showBanner();
 route();
+</script>
+<script>
+/* ===== Anketa „Odkud jste se o nás dozvěděli?“ =====
+   Stav panelu (zavřeno / zodpovězeno) se pamatuje v localStorage pod klíčem tmk_src, ale JEN při souhlasu s preferenčními cookies.
+   Bez souhlasu se stav drží jen v paměti stránky. Panel se vůbec nezačne odpočítávat, dokud návštěvník nevybere cookie volbu.
+   SKUTEČNÝ SBĚR ODPOVĚDÍ: web zatím nemá backend. Odpověď se nikam neodesílá, pokud nevyplníte SRC_ENDPOINT
+   (POST JSON: {source,detail,lang,ts,page}). Každá odpověď také vyvolá událost window "tmk:source-answer" (detail = payload),
+   na kterou lze napojit analytiku nebo backend. */
+(function(){
+"use strict";
+const SRC_ENDPOINT="";                 // ← adresa budoucího API; prázdné = odpověď se neposílá nikam
+const KEY="tmk_src",SHOW_AFTER=10,DISMISS_DAYS=30,THANKS_MS=2800;
+const OPTS=[["instagram","Instagram","Instagram"],["tiktok","TikTok","TikTok"],["facebook","Facebook","Facebook"],["google","Google","Google"],["youtube","YouTube","YouTube"],
+  ["referral","Doporučení od známého","A friend's recommendation"],["ads","Reklama","Advertisement"],["other","Jinde","Somewhere else"]];
+const TXT={cs:{h:"Odkud jste se o nás dozvěděli?",close:"Zavřít",ph:"Upřesněte (nepovinné)",send:"Odeslat",thanks:"Děkujeme za odpověď."},
+           en:{h:"How did you hear about us?",close:"Close",ph:"Tell us more (optional)",send:"Send",thanks:"Thank you for your answer."}};
+const panel=document.getElementById("srcPanel");if(!panel)return;
+const lg=()=>document.documentElement.lang==="en"?"en":"cs";
+const prefOK=()=>typeof consent!=="undefined"&&!!(consent&&consent.preferences);
+const resolved=()=>typeof consent!=="undefined"&&!!consent;
+let mem=null,done=false,shown=false,picked="";
+
+function readState(){
+  if(prefOK()){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.v===1)return s}catch(e){}}
+  return mem;
+}
+function writeState(kind){
+  const s={v:1,s:kind,ts:Date.now()};mem=s;
+  if(prefOK()){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
+}
+function blocked(){
+  const s=readState();if(!s)return false;
+  return s.s==="answered"||(Date.now()-s.ts<DISMISS_DAYS*864e5);
+}
+function cleanup(){if(!prefOK()){try{localStorage.removeItem(KEY)}catch(e){}}}   // souhlas odvolán → klíč pryč
+
+function render(){
+  const t=TXT[lg()];
+  if(done){panel.innerHTML=`<p class="src-t" role="status">${t.thanks}</p>`;return}
+  panel.innerHTML=`<div class="src-h"><h2 id="srcH">${t.h}</h2><button type="button" class="src-x" aria-label="${t.close}" data-testid="source-close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <form novalidate><fieldset><legend class="sr">${t.h}</legend>${OPTS.map(o=>`<label class="src-opt"><input type="radio" name="src" value="${o[0]}"${picked===o[0]?" checked":""} data-testid="source-opt-${o[0]}"><span>${lg()==="en"?o[2]:o[1]}</span></label>`).join("")}</fieldset>
+  <div class="src-o" id="srcO"${picked==="other"?"":" hidden"}><input type="text" id="srcT" maxlength="120" autocomplete="off" placeholder="${t.ph}" aria-label="${t.ph}" data-testid="source-other-text"><button class="btn" type="submit" data-testid="source-send">${t.send}</button></div></form>`;
+}
+function send(source,detail){
+  const payload={source,lang:lg(),ts:new Date().toISOString(),page:location.pathname};
+  if(detail)payload.detail=detail;
+  window.dispatchEvent(new CustomEvent("tmk:source-answer",{detail:payload}));
+  if(SRC_ENDPOINT){try{fetch(SRC_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),keepalive:true}).catch(()=>{})}catch(e){}}
+}
+function show(){
+  if(shown)return;shown=true;render();
+  panel.hidden=false;panel.setAttribute("aria-hidden","false");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>panel.classList.add("on")));
+}
+function hide(kind){
+  if(kind)writeState(kind);
+  panel.classList.remove("on");panel.setAttribute("aria-hidden","true");
+  setTimeout(()=>{panel.hidden=true},520);
+}
+function answer(source,detail){
+  if(done)return;done=true;send(source,detail);writeState("answered");
+  render();setTimeout(()=>hide(),THANKS_MS);
+}
+panel.addEventListener("change",e=>{
+  if(e.target.name!=="src")return;
+  picked=e.target.value;
+  if(picked==="other"){const o=document.getElementById("srcO");o.hidden=false;document.getElementById("srcT").focus()}
+  else setTimeout(()=>answer(picked),220);
+});
+panel.addEventListener("submit",e=>{
+  e.preventDefault();if(picked!=="other")return;
+  answer("other",(document.getElementById("srcT").value||"").trim().slice(0,120));
+});
+panel.addEventListener("click",e=>{if(e.target.closest(".src-x"))hide("dismissed")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&panel.classList.contains("on")&&panel.contains(document.activeElement))hide(done?null:"dismissed")});
+document.addEventListener("click",e=>{if(e.target.closest("[data-cc]"))setTimeout(cleanup,0)});
+new MutationObserver(()=>{if(shown&&!panel.hidden)render()}).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
+
+/* odpočet běží jen po rozhodnutí o cookies, jen při viditelné záložce a nikdy ne přes košík, okna nebo galerii */
+let secs=0;
+const iv=setInterval(()=>{
+  if(shown){clearInterval(iv);return}
+  if(!resolved()||document.hidden)return;
+  if(blocked()){clearInterval(iv);return}
+  if(++secs<SHOW_AFTER)return;
+  if(document.querySelector("#drawer.on,.modal.on,#xg.on,#ccb.on"))return;
+  clearInterval(iv);show();
+},1000);
+cleanup();
+})();
 </script>
 <script src="extra-gallery.js" defer></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"7f7b0fd8732c4326aae4b9d58d5c514a","spa":2}' crossorigin="anonymous"></script>
