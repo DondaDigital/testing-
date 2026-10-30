@@ -50,7 +50,7 @@ function ribs(x0,x1,y0,y1,step,col){let d="";for(let x=x0+step;x<x1;x+=step)d+=`
 const HANGER='<path d="M120 44V30C120 21 129 18 129 10C129 3.5 122 1.5 118.5 4.5C116 6.7 116.5 10.5 119.5 12.5" fill="none" stroke="#9c9c9c" stroke-width="2.4" stroke-linecap="round"/><path d="M120 44V30" stroke="#fff" stroke-opacity=".6" stroke-width=".8" fill="none"/><rect x="112" y="40" width="16" height="9" rx="2.5" fill="#3b2a21"/><path d="M120 46C98 46 62 56 34 75L38 83C66 67 100 57 120 57C140 57 174 67 202 83L206 75C178 56 142 46 120 46Z" fill="url(#xgWood)" stroke="#1d130e" stroke-width=".6"/>';
 function garment(it,col,side){
   const im=it.img&&it.img[col]&&it.img[col][side];
-  if(im)return `<img src="${esc(im)}" alt="${esc(nameOf(it,col))}" draggable="false" loading="lazy">`;
+  if(im)return `<img src="${esc(encodeURI(im))}" alt="${esc(nameOf(it,col))}" draggable="false" loading="lazy">`;
   const W=col==="white",front=side==="front",hood=it.type==="hoodie";
   const C=W?{f:"#f6f6f3",s:"rgba(0,0,0,.38)",rib:"#e4e4e0",lin:"#cdcdc8",fold:"rgba(0,0,0,.09)",ink:"#121212",str:"#ecece8",rl:"rgba(0,0,0,.12)"}
            :{f:"#171717",s:"rgba(255,255,255,.24)",rib:"#0d0d0d",lin:"#040404",fold:"rgba(255,255,255,.075)",ink:"#f4f4f4",str:"#8c8c8c",rl:"rgba(255,255,255,.1)"};
