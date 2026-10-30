@@ -1013,7 +1013,7 @@ function buildHero(){
     a.href="#shop";a.className="slide"+(i===slide?" on":"");
     a.setAttribute("role","group");a.setAttribute("aria-label",(i+1)+" / "+SLIDES.length);
     a.dataset.slide=String(i+1);
-    a.innerHTML=s.img?`<img src="${s.img}" alt="TEMNAK" style="object-position:${s.position||"50% 50%"}" ${i?'loading="lazy"':""}>`:`<div class="ph">${t("ph")} ${i+1}</div>`;
+    a.innerHTML=s.img?`<img src="${encodeURI(s.img)}" alt="TEMNAK" style="object-position:${s.position||"50% 50%"}" ${i?'loading="lazy"':""}>`:`<div class="ph">${t("ph")} ${i+1}</div>`;
     $("#hero").insertBefore(a,ctrl);
   });
   $("#cnt").textContent=(slide+1)+" / "+SLIDES.length;
