@@ -3,154 +3,122 @@
 "use strict";
 
 /* ============ UPRAVTE ZDE ============
-   Kousky v galerii se berou automaticky z PRODUCTS v index.html (kategorie Mikiny a Trička):
-   název, cena i okno s velikostmi jsou tedy stejné jako v obchodě.
-   XG_IMG = vlastní fotky/cut-outy zavěšené na ramínku (průhledné PNG), podle id produktu:
-   XG_IMG={1:{white:{front:"mikina1-w-front.png",back:"mikina1-w-back.png"},black:{front:"…",back:"…"}}}
-   Bez fotky se nakreslí ilustrace (koncept, ne skutečný produkt). */
-const XG_IMG={};   // ZÁMĚRNĚ PRÁZDNÉ – žádné fotky, oblečení se kreslí přímo v kódu (SVG)
-/* Vestavěné kousky uložené v kódu – použijí se, když v PRODUCTS nejsou mikiny/trička */
-const XG_BUILTIN=[
- {id:"xg-h-w",cat:"mikiny",color:"white",name:{cs:"Mikina TEMNAK – bílá",en:"TEMNAK Hoodie – white"}},
- {id:"xg-h-b",cat:"mikiny",color:"black",name:{cs:"Mikina TEMNAK – černá",en:"TEMNAK Hoodie – black"}},
- {id:"xg-t-w",cat:"tricka",color:"white",name:{cs:"Tričko TEMNAK – bílé",en:"TEMNAK Tee – white"}},
- {id:"xg-t-b",cat:"tricka",color:"black",name:{cs:"Tričko TEMNAK – černé",en:"TEMNAK Tee – black"}}
+   file = přesný název souboru v repozitáři (vedle index.html).
+   pid  = id produktu v PRODUCTS (index.html) – odtud se bere název, cena i okno s velikostmi.
+   Pořadí pid je předpoklad: 1 a 2 jsou mikiny, 3 a 4 trička (jako kategorie v PRODUCTS). Změníte-li pořadí, upravte jen pid. */
+const XG_ITEMS=[
+ {pid:1,file:"Minimalist bílá mikina TEMNAK.png",
+  kind:{cs:"Mikina · bílá",en:"Hoodie · white"},alt:{cs:"Bílá mikina TEMNAK na ramínku",en:"White TEMNAK hoodie on a hanger"}},
+ {pid:2,file:"Minimalist černá mikina TEMNAK.png",
+  kind:{cs:"Mikina · černá",en:"Hoodie · black"},alt:{cs:"Černá mikina TEMNAK na ramínku",en:"Black TEMNAK hoodie on a hanger"}},
+ {pid:3,file:"Minimalist tričko TEMNAK na ramínku.png",
+  kind:{cs:"Tričko · bílé",en:"T-shirt · white"},alt:{cs:"Bílé tričko TEMNAK na ramínku",en:"White TEMNAK t-shirt on a hanger"}},
+ {pid:4,file:"Minimalistické černé tričko TEMNAK.png",
+  kind:{cs:"Tričko · černé",en:"T-shirt · black"},alt:{cs:"Černé tričko TEMNAK na ramínku",en:"Black TEMNAK t-shirt on a hanger"}}
 ];
-const XG_AUTO=3600;   // ms – jak často se věšák sám posune na další kousek (0 = vypnuto)
-const XG_TYPE={mikiny:"hoodie",tricka:"tee"};
-const XG_COLORS=["black","white"];          // barva kousku na věšáku podle pořadí
 const XGT={
- cs:{close:"Zavřít",closeAria:"Zavřít galerii",hint:"Najeď na kousek · klikni pro detail",view:"Zobrazit",buy:"Vybrat velikost",
-  backRack:"Zpět na věšák",sideF:"Přední",sideB:"Zadní",prev:"Předchozí kousek",next:"Další kousek",flipAria:"Otočit kousek",
-  white:"Bílá",black:"Černá",soon:"Připravujeme",empty:"Zatím tu nic nevisí."},
- en:{close:"Close",closeAria:"Close gallery",hint:"Hover an item · click for details",view:"View",buy:"Choose size",
-  backRack:"Back to the rail",sideF:"Front",sideB:"Back",prev:"Previous item",next:"Next item",flipAria:"Turn the item",
-  white:"White",black:"Black",soon:"Coming soon",empty:"Nothing is hanging here yet."}
+ cs:{close:"Zavřít",closeAria:"Zavřít galerii",hint:"Táhni do stran · klepni na kousek",view:"Zobrazit",buy:"Vybrat velikost",
+  backRack:"Zpět do showroomu",prev:"Předchozí kousek",next:"Další kousek",soon:"Připravujeme",empty:"Zatím tu nic nevisí."},
+ en:{close:"Close",closeAria:"Close gallery",hint:"Swipe sideways · tap an item",view:"View",buy:"Choose size",
+  backRack:"Back to the showroom",prev:"Previous item",next:"Next item",soon:"Coming soon",empty:"Nothing is hanging here yet."}
 };
 /* ===================================== */
 
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const root=$("#xg"),rack=$("#xgRack");
 if(!root||!rack)return;
-const cap=$("#xgCap"),detail=$("#xgDetail"),box=$("#xgBox"),flipEl=$("#xgFlip");
+const cap=$("#xgCap"),detail=$("#xgDetail"),dimg=$("#xgDImg"),dimgEl=$("#xgDImgEl");
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const lg=()=>document.documentElement.lang==="en"?"en":"cs";
 const tx=k=>XGT[lg()][k];
 const L=o=>o&&typeof o==="object"?(o[lg()]??o.cs??""):(o??"");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-let items=[],active=0,idx=-1,color="black",flipped=false,pushed=false,opener=null;
+/* Názvy souborů v repozitáři jsou uložené s rozloženou diakritikou (NFD). Zkusí se NFD, při chybě i složený tvar (NFC). */
+const src=f=>encodeURI(f.normalize("NFD"));
+const srcAlt=f=>encodeURI(f.normalize("NFC"));
+const ONERR="if(!this.dataset.f){this.dataset.f=1;this.src=this.dataset.alt}";
+
+let items=[],active=0,idx=-1,pushed=false,opener=null,moved=false,ptype="mouse",raf=0;
 
 function list(){
   const P=typeof PRODUCTS!=="undefined"?PRODUCTS:[];
-  const fromShop=P.filter(p=>XG_TYPE[p.cat]).map((p,i)=>({id:String(p.id),pid:p.id,type:XG_TYPE[p.cat],p,color:XG_COLORS[i%2],img:null}));
-  if(fromShop.length)return fromShop;
-  return XG_BUILTIN.map(b=>({id:b.id,pid:null,type:XG_TYPE[b.cat],p:{name:b.name,price:0},color:b.color,img:null}));
+  return XG_ITEMS.map(x=>({...x,id:String(x.pid),p:P.find(p=>p.id===x.pid)||null}));
 }
-const nameOf=it=>L(it.p.name);
-const priceOf=it=>it.p.price>0&&typeof money==="function"?money(it.p.price):tx("soon");
+const nameOf=it=>it.p?L(it.p.name):L(it.kind);
+const priceOf=it=>it.p&&it.p.price>0&&typeof money==="function"?money(it.p.price):tx("soon");
+const imgTag=(it,i,cls)=>`<img${cls?` class="${cls}"`:""} src="${src(it.file)}" data-alt="${esc(srcAlt(it.file))}" onerror="${ONERR}" alt="${esc(L(it.alt))}" width="1145" height="1374" decoding="async" draggable="false"${i>0?' loading="lazy"':""}>`;
 
-/* ---------- kresba oblečení (ilustrace, dokud nejsou fotky) ---------- */
-function ribs(x0,x1,y0,y1,step,col){let d="";for(let x=x0+step;x<x1;x+=step)d+=`M${x} ${y0}V${y1}`;return `<path d="${d}" stroke="${col}" stroke-width="1" fill="none"/>`}
-const HANGER='<path d="M120 44V30C120 21 129 18 129 10C129 3.5 122 1.5 118.5 4.5C116 6.7 116.5 10.5 119.5 12.5" fill="none" stroke="#9c9c9c" stroke-width="2.4" stroke-linecap="round"/><path d="M120 44V30" stroke="#fff" stroke-opacity=".6" stroke-width=".8" fill="none"/><rect x="112" y="40" width="16" height="9" rx="2.5" fill="#3b2a21"/><path d="M120 46C98 46 62 56 34 75L38 83C66 67 100 57 120 57C140 57 174 67 202 83L206 75C178 56 142 46 120 46Z" fill="url(#xgWood)" stroke="#1d130e" stroke-width=".6"/>';
-function garment(it,col,side){
-  const im=it.img&&it.img[col]&&it.img[col][side];
-  if(im)return `<img src="${esc(im)}" alt="${esc(nameOf(it))}" draggable="false" loading="lazy">`;
-  const W=col==="white",front=side==="front",hood=it.type==="hoodie";
-  const C=W?{f:"#f6f6f3",s:"rgba(0,0,0,.38)",rib:"#e4e4e0",lin:"#cdcdc8",fold:"rgba(0,0,0,.09)",ink:"#121212",str:"#ecece8",rl:"rgba(0,0,0,.12)"}
-           :{f:"#171717",s:"rgba(255,255,255,.24)",rib:"#0d0d0d",lin:"#040404",fold:"rgba(255,255,255,.075)",ink:"#f4f4f4",str:"#8c8c8c",rl:"rgba(255,255,255,.1)"};
-  const font='font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-weight="800" text-anchor="middle"';
-  const shade=d=>`<path d="${d}" fill="url(#xgShade)"/><path d="${d}" fill="url(#xgShadeV)"/>`;
-  let s=HANGER;
-  if(!hood){
-    const neck=front?"C140 70 130 76 120 76C110 76 100 70 94 54Z":"C140 59 130 61 120 61C110 61 100 59 94 54Z";
-    const P="M94 54L48 72L18 122L48 138L66 112V256H174V112L192 138L222 122L192 72L146 54"+neck;
-    s+=`<path d="${P}" fill="${C.f}" stroke="${C.s}" stroke-width="1"/>`+shade(P)
-      +`<g fill="none" stroke="${C.fold}" stroke-width="2.2" stroke-linecap="round"><path d="M92 92C98 140 90 196 96 250"/><path d="M148 96C142 150 152 200 146 252"/><path d="M120 120C122 170 118 210 122 252" stroke-width="1.4"/><path d="M56 106L40 128M184 106L200 128"/></g>`
-      +`<g fill="none" stroke="${C.rl}" stroke-width="1" stroke-dasharray="2 3"><path d="M66 247H174"/><path d="M20 118L50 134M220 118L190 134"/></g>`
-      +(front?`<path d="M95 55C101 70 111 76 120 76C129 76 139 70 145 55" fill="none" stroke="${C.rib}" stroke-width="6"/><path d="M92 55C99 73 110 79 120 79C130 79 141 73 148 55" fill="none" stroke="${C.s}" stroke-width=".8"/>`
-             :`<path d="M95 55C106 59 134 59 145 55" fill="none" stroke="${C.rib}" stroke-width="5"/>`)
-      +(front?`<text x="120" y="150" ${font} font-size="19" letter-spacing="3" fill="${C.ink}">TEMNAK</text>`
-             :`<text x="120" y="132" ${font} font-size="20" letter-spacing="3" fill="${C.ink}">TEMNAK</text><text x="120" y="148" ${font} font-weight="500" font-size="7" letter-spacing="3" fill="${C.ink}">OFFICIAL MERCH</text>`);
-  }else{
-    const B="M92 52L48 68C34 100 30 170 34 232L64 238C66 200 66 170 70 130V252H170V130C174 170 174 200 176 238L206 232C210 170 206 100 192 68L148 52Z";
-    s+=`<path d="${B}" fill="${C.f}" stroke="${C.s}" stroke-width="1"/>`+shade(B)
-      +`<path d="M70 238H170V252H70Z" fill="${C.rib}" stroke="${C.s}" stroke-width=".6"/>`+ribs(70,170,238,252,6,C.rl)
-      +`<path d="M33 218L65 224L64 238L34 232Z" fill="${C.rib}" stroke="${C.s}" stroke-width=".6"/><path d="M207 218L175 224L176 238L206 232Z" fill="${C.rib}" stroke="${C.s}" stroke-width=".6"/>`
-      +`<g fill="none" stroke="${C.fold}" stroke-width="2" stroke-linecap="round"><path d="M70 130C67 170 66 205 64 238"/><path d="M170 130C173 170 174 205 176 238"/><path d="M100 120C104 170 98 215 102 232" stroke-width="1.6"/><path d="M142 120C138 170 144 215 140 232" stroke-width="1.6"/></g>`;
-    if(front){
-      const H="M86 58C84 38 100 27 120 27C140 27 156 38 154 58C146 74 134 80 120 80C106 80 94 74 86 58Z";
-      s+=`<path d="${H}" fill="${C.f}" stroke="${C.s}" stroke-width="1"/>`+shade(H)
-        +`<path d="M95 55C99 42 110 37 120 37C130 37 141 42 145 55C139 68 130 73 120 73C110 73 101 68 95 55Z" fill="${C.lin}" stroke="${C.s}" stroke-width=".8"/>`
-        +`<path d="M108 74C107 96 106 112 106 128M132 74C133 98 135 114 135 132" stroke="${C.str}" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="104" y="128" width="4" height="9" rx="2" fill="#777"/><rect x="133" y="132" width="4" height="9" rx="2" fill="#777"/>`
-        +`<path d="M82 178H158L170 232H70Z" fill="none" stroke="${C.s}" stroke-width=".9"/><path d="M82 178H158" stroke="${C.fold}" stroke-width="2.4"/>`
-        +`<text x="120" y="162" ${font} font-size="14" letter-spacing="2.6" fill="${C.ink}">TEMNAK</text>`;
-    }else{
-      const H="M80 56C80 36 100 26 120 26C140 26 160 36 160 56C160 92 142 122 120 122C98 122 80 92 80 56Z";
-      s+=`<path d="${H}" fill="${C.f}" stroke="${C.s}" stroke-width="1"/>`+shade(H)+`<path d="M120 30V118" stroke="${C.fold}" stroke-width="2" fill="none"/>`
-        +`<text x="120" y="176" ${font} font-size="24" letter-spacing="3.5" fill="${C.ink}">TEMNAK</text><text x="120" y="192" ${font} font-weight="500" font-size="7" letter-spacing="3" fill="${C.ink}">OFFICIAL MERCH</text>`;
-    }
-  }
-  return `<svg viewBox="0 0 240 300" aria-hidden="true">${s}</svg>`;
-}
-
-/* ---------- věšák ---------- */
+/* ---------- showroom ---------- */
 function renderRack(){
   items=list();
+  const sl=rack.scrollLeft;
   if(!items.length){rack.innerHTML=`<p class="xg-empty">${esc(tx("empty"))}</p>`;cap.style.visibility="hidden";return}
   cap.style.visibility="";
   active=Math.max(0,Math.min(active,items.length-1));
-  rack.innerHTML=`<div class="xg-rackin${reduce?"":" xg-in"}"><i class="xg-brk l"></i><i class="xg-brk r"></i>`+items.map((it,i)=>
-    `<button type="button" class="xg-it${i===active?" on":""}" style="--i:${i}" data-i="${i}" aria-label="${esc(nameOf(it)+", "+priceOf(it))}" data-testid="xg-item-${it.id}">
-      <span class="xg-sw"><span class="xg-gm" style="--ry:${i%2?-72:72}deg">${garment(it,it.color,"front")}</span></span></button>`).join("")+`</div>`;
+  rack.innerHTML=`<div class="xg-track">`+items.map((it,i)=>
+    `<button type="button" class="xg-it" data-i="${i}" aria-label="${esc(nameOf(it)+", "+L(it.kind)+", "+priceOf(it))}" data-testid="xg-item-${it.id}"><span class="xg-ph">${imgTag(it,i)}</span></button>`).join("")+`</div>`;
+  rack.scrollLeft=sl;depth();
 }
-function setActive(i,scroll){
+function setActive(i){
   if(!items[i])return;
-  const changed=i!==active;active=i;
-  $$(".xg-it",rack).forEach((b,j)=>b.classList.toggle("on",j===i));
+  const changed=i!==active||!$("#xgCapName").textContent;active=i;
   const it=items[i];
-  $("#xgCapName").textContent=nameOf(it);$("#xgCapPrice").textContent=priceOf(it);
+  $("#xgCapName").textContent=nameOf(it);$("#xgCapKind").textContent=L(it.kind);$("#xgCapPrice").textContent=priceOf(it);
   if(changed){cap.classList.remove("xgcap-in");void cap.offsetWidth;cap.classList.add("xgcap-in")}
-  if(scroll){const b=$(`.xg-it[data-i="${i}"]`,rack);b&&b.scrollIntoView({inline:"center",block:"nearest",behavior:reduce?"auto":"smooth"})}
 }
+function scrollToIndex(i,smooth){
+  const n=$(`.xg-it[data-i="${i}"]`,rack);if(!n)return;
+  rack.scrollTo({left:n.offsetLeft-(rack.clientWidth-n.offsetWidth)/2,behavior:smooth&&!reduce?"smooth":"auto"});
+}
+/* hloubka: kousky ve středu jsou plné, okolní se mírně zmenší, natočí a ztlumí */
+function depth(){
+  raf=0;
+  const rc=rack.getBoundingClientRect(),cx=rc.left+rc.width/2,nodes=$$(".xg-it",rack);
+  if(!nodes.length)return;
+  let best=0,bd=1e9;
+  nodes.forEach((n,i)=>{
+    const r=n.getBoundingClientRect(),dist=r.left+r.width/2-cx,d=Math.max(-1.4,Math.min(1.4,dist/(r.width*1.1)));
+    const a=Math.min(Math.abs(d),1),ph=n.firstElementChild;
+    ph.style.setProperty("--s",reduce?1:(1-.12*a).toFixed(3));
+    ph.style.setProperty("--r",reduce?"0deg":(-d*14).toFixed(2)+"deg");
+    ph.style.setProperty("--o",(1-.5*a).toFixed(3));
+    if(Math.abs(dist)<bd){bd=Math.abs(dist);best=i}
+  });
+  if(best!==active)setActive(best);
+}
+const queueDepth=()=>{if(!raf)raf=requestAnimationFrame(depth)};
 
 /* ---------- detail ---------- */
 function renderDetail(){
   const it=items[idx];if(!it)return;const n=items.length;
-  $("#xgFront").innerHTML=garment(it,color,"front");
-  $("#xgBackF").innerHTML=garment(it,color,"back");
-  const pv=items[(idx-1+n)%n],nx=items[(idx+1)%n];
-  $("#xgGL").innerHTML=n>1?garment(pv,pv.color,"front"):"";
-  $("#xgGR").innerHTML=n>1?garment(nx,nx.color,"front"):"";
-  $("#xgTags").innerHTML=["white","black"].map(c=>`<button type="button" class="xg-tag ${c}" data-c="${c}" aria-pressed="${c===color}" aria-label="${esc(tx(c))}" data-testid="xg-tag-${c}"><span>${esc(tx(c))}</span></button>`).join("");
-  $("#xgName").textContent=nameOf(it);$("#xgPrice").textContent=priceOf(it);
-  flipEl.classList.toggle("flipped",flipped);
-  const seg=$("#xgSeg");seg.style.setProperty("--pos",flipped?1:0);
-  $$("button",seg).forEach(b=>b.setAttribute("aria-pressed",(b.dataset.side==="back")===flipped));
+  dimgEl.src=src(it.file);dimgEl.dataset.alt=srcAlt(it.file);delete dimgEl.dataset.f;
+  dimgEl.alt=L(it.alt);
+  $("#xgName").textContent=nameOf(it);$("#xgKind").textContent=L(it.kind);$("#xgPrice").textContent=priceOf(it);
+  $("#xgBuy").hidden=!it.p||typeof openModal!=="function";
   $("#xgPrev").hidden=$("#xgNext").hidden=n<2;
+  dimg.classList.remove("zoom");
 }
-function setFlip(f){flipped=f;flipEl.classList.toggle("flipped",f);const seg=$("#xgSeg");seg.style.setProperty("--pos",f?1:0);$$("button",seg).forEach(b=>b.setAttribute("aria-pressed",(b.dataset.side==="back")===f))}
 function nav(d){
   const n=items.length;if(n<2)return;
-  box.style.setProperty("--sx",d>0?"30px":"-30px");
-  idx=(idx+d+n)%n;color=items[idx].color;flipped=false;
+  dimg.style.setProperty("--sx",d>0?"30px":"-30px");
+  idx=(idx+d+n)%n;active=idx;
   history.replaceState(null,"",location.pathname+location.search+"#extra-gallery/"+items[idx].id);
-  renderDetail();box.classList.remove("swap");void box.offsetWidth;box.classList.add("swap");
+  renderDetail();dimg.classList.remove("swap");void dimg.offsetWidth;dimg.classList.add("swap");
 }
 
 /* ---------- zobrazení / skrytí ---------- */
 function applyT(){
   $$("#xg [data-xgt]").forEach(el=>{el.textContent=tx(el.dataset.xgt)});
   $("#xgClose").setAttribute("aria-label",tx("closeAria"));
-  $("#xgPrev").setAttribute("aria-label",tx("prev"));$("#xgNext").setAttribute("aria-label",tx("next"));
-  $("#xgFig").setAttribute("aria-label",tx("flipAria"));
+  [["#xgPrev","prev"],["#xgNext","next"],["#xgSPrev","prev"],["#xgSNext","next"]].forEach(([s,k])=>$(s).setAttribute("aria-label",tx(k)));
 }
 function openUI(){
   if(root.classList.contains("on"))return;
   opener=document.activeElement;
   root.classList.add("on");root.setAttribute("aria-hidden","false");
   document.documentElement.classList.add("xg-lock");
-  setActive(active,true);
+  requestAnimationFrame(()=>{scrollToIndex(active,false);depth()});
   setTimeout(()=>$("#xgClose").focus({preventScroll:true}),80);
 }
 function closeUI(){
@@ -163,14 +131,17 @@ function closeUI(){
 function showStage(){
   const had=root.classList.contains("pv")?idx:-1;
   root.classList.remove("pv");detail.hidden=true;pushed=false;
-  if(had>=0){active=had;idx=-1;setActive(had,true);const b=$(`.xg-it[data-i="${had}"]`,rack);b&&b.focus({preventScroll:true})}
+  if(had>=0){
+    active=had;idx=-1;setActive(had);
+    requestAnimationFrame(()=>{scrollToIndex(had,false);depth();const b=$(`.xg-it[data-i="${had}"]`,rack);b&&b.focus({preventScroll:true})});
+  }
   idx=-1;
 }
 function showDetail(i){
   if(root.classList.contains("pv")&&idx===i)return;
-  idx=i;color=items[i].color;flipped=false;renderDetail();
+  idx=i;active=i;renderDetail();
   root.classList.add("pv");detail.hidden=false;
-  box.classList.remove("swap");void box.offsetWidth;
+  dimg.classList.remove("swap");void dimg.offsetWidth;
   setTimeout(()=>$("#xgBack").focus({preventScroll:true}),60);
 }
 function sync(){
@@ -187,55 +158,73 @@ function goBack(){
   else{history.replaceState(null,"",location.pathname+location.search+"#extra-gallery");sync()}
 }
 function openDetail(id){pushed=true;location.hash="#extra-gallery/"+id}
+function step(d){
+  scrollToIndex(Math.max(0,Math.min(items.length-1,active+d)),true);
+}
 
 /* ---------- události ---------- */
 $("#xgClose").addEventListener("click",closeGallery);
 $("#xgBack").addEventListener("click",goBack);
 $("#xgPrev").addEventListener("click",()=>nav(-1));
 $("#xgNext").addEventListener("click",()=>nav(1));
-$("#xgFig").addEventListener("click",()=>setFlip(!flipped));
-$("#xgSeg").addEventListener("click",e=>{const b=e.target.closest("[data-side]");if(b)setFlip(b.dataset.side==="back")});
-$("#xgTags").addEventListener("click",e=>{
-  const b=e.target.closest("[data-c]");if(!b||b.dataset.c===color)return;
-  color=b.dataset.c;renderDetail();
-});
-$("#xgBuy").addEventListener("click",()=>{
-  const it=items[idx];if(!it)return;
-  closeGallery();
-  if(it.pid!=null&&typeof openModal==="function")setTimeout(()=>openModal(it.pid),90);
-});
+$("#xgSPrev").addEventListener("click",()=>step(-1));
+$("#xgSNext").addEventListener("click",()=>step(1));
 $("#xgCapBtn").addEventListener("click",()=>{if(items[active])openDetail(items[active].id)});
-rack.addEventListener("pointerover",e=>{
+$("#xgBuy").addEventListener("click",()=>{
+  const it=items[idx];if(!it||!it.p)return;
+  closeGallery();
+  if(typeof openModal==="function")setTimeout(()=>openModal(it.pid),90);
+});
+/* zoom v detailu (myš) – klik přiblíží, pohyb myši posouvá výřez */
+dimg.addEventListener("pointermove",e=>{
   if(e.pointerType!=="mouse")return;
-  const b=e.target.closest(".xg-it");if(b&&+b.dataset.i!==active)setActive(+b.dataset.i);
+  const r=dimg.getBoundingClientRect();
+  dimg.style.setProperty("--ox",((e.clientX-r.left)/r.width*100).toFixed(1)+"%");
+  dimg.style.setProperty("--oy",((e.clientY-r.top)/r.height*100).toFixed(1)+"%");
 });
-/* myš: kousek je aktivní už po najetí, klik otevře detail. Dotyk: 1. klepnutí kousek vysune, 2. klepnutí otevře detail. */
+dimg.addEventListener("click",e=>{
+  if(ptype!=="mouse")return;
+  const r=dimg.getBoundingClientRect();
+  dimg.style.setProperty("--ox",((e.clientX-r.left)/r.width*100).toFixed(1)+"%");
+  dimg.style.setProperty("--oy",((e.clientY-r.top)/r.height*100).toFixed(1)+"%");
+  dimg.classList.toggle("zoom");
+});
+
+/* showroom: dotyk = nativní swipe, myš = tažení a kolečko */
+rack.addEventListener("scroll",queueDepth,{passive:true});
+window.addEventListener("resize",()=>{if(root.classList.contains("on")){scrollToIndex(active,false);queueDepth()}});
 let downActive=-1;
-rack.addEventListener("pointerdown",e=>{const b=e.target.closest(".xg-it");downActive=b?active:-1});
-rack.addEventListener("click",e=>{
-  const b=e.target.closest(".xg-it");if(!b)return;
-  const i=+b.dataset.i,kbd=e.detail===0;
-  if(kbd||downActive===i)openDetail(items[i].id);else setActive(i,true);
-  downActive=-1;
+rack.addEventListener("pointerdown",e=>{ptype=e.pointerType;downActive=active});
+let down=false,sx=0,sl=0;
+rack.addEventListener("pointerdown",e=>{if(e.pointerType!=="mouse"||e.button!==0)return;down=true;moved=false;sx=e.clientX;sl=rack.scrollLeft});
+rack.addEventListener("pointermove",e=>{
+  if(!down)return;const dx=e.clientX-sx;
+  if(!moved&&Math.abs(dx)>6){moved=true;rack.classList.add("drag");try{rack.setPointerCapture(e.pointerId)}catch(_){}}
+  if(moved)rack.scrollLeft=sl-dx;
 });
-rack.addEventListener("focusin",e=>{const b=e.target.closest(".xg-it");if(b)setActive(+b.dataset.i)});
+["pointerup","pointercancel"].forEach(ev=>rack.addEventListener(ev,()=>{
+  if(!down)return;down=false;
+  if(moved){rack.classList.remove("drag");scrollToIndex(active,true)}
+  setTimeout(()=>{moved=false},0);
+}));
+rack.addEventListener("click",e=>{
+  if(moved){moved=false;e.preventDefault();e.stopPropagation();return}
+  const b=e.target.closest(".xg-it");if(!b)return;
+  const i=+b.dataset.i;
+  if(ptype==="touch"&&e.detail!==0&&i!==downActive)scrollToIndex(i,true);  /* dotyk: 1. klepnutí vycentruje, 2. otevře detail */
+  else openDetail(items[i].id);
+},true);
+rack.addEventListener("focusin",e=>{const b=e.target.closest(".xg-it");if(b&&+b.dataset.i!==active){setActive(+b.dataset.i)}});
+let wheelAt=0;
+rack.addEventListener("wheel",e=>{
+  if(Math.abs(e.deltaY)<=Math.abs(e.deltaX))return;           /* vodorovný trackpad necháme nativně */
+  e.preventDefault();
+  const now=Date.now();if(now-wheelAt<420||Math.abs(e.deltaY)<8)return;
+  wheelAt=now;step(e.deltaY>0?1:-1);
+},{passive:false});
 window.addEventListener("hashchange",sync);
 
-/* ---------- animovaný posuvný věšak: sám jede na další kousek, při interakci se zastaví ---------- */
-let autoT=null,holdUntil=0;
-const hold=()=>{holdUntil=Date.now()+XG_AUTO*2};
-function tick(){
-  if(!root.classList.contains("on")||root.classList.contains("pv")||items.length<2||Date.now()<holdUntil)return;
-  setActive((active+1)%items.length,true);
-}
-function autoOn(){if(XG_AUTO&&!reduce&&!autoT)autoT=setInterval(tick,XG_AUTO)}
-function autoOff(){clearInterval(autoT);autoT=null}
-["pointerdown","wheel","touchstart","keydown","focusin"].forEach(ev=>rack.addEventListener(ev,hold,{passive:true}));
-rack.addEventListener("pointerenter",e=>{if(e.pointerType==="mouse")holdUntil=Infinity});
-rack.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")hold()});
-new MutationObserver(()=>root.classList.contains("on")?autoOn():autoOff()).observe(root,{attributes:true,attributeFilter:["class"]});
-
-/* swipe na dotykových zařízeních */
+/* swipe v detailu */
 let tx0=0,ty0=0;
 detail.addEventListener("touchstart",e=>{tx0=e.touches[0].clientX;ty0=e.touches[0].clientY},{passive:true});
 detail.addEventListener("touchend",e=>{
@@ -250,10 +239,10 @@ document.addEventListener("keydown",e=>{
   if(e.key==="ArrowRight"||e.key==="ArrowLeft"){
     const d=e.key==="ArrowRight"?1:-1;
     if(pv){nav(d);e.preventDefault()}
-    else if(items.length){const i=Math.max(0,Math.min(items.length-1,active+d));setActive(i,true);const b=$(`.xg-it[data-i="${i}"]`,rack);b&&b.focus({preventScroll:true});e.preventDefault()}
+    else if(items.length){step(d);e.preventDefault()}
   }
   if(e.key==="Tab"){
-    const f=$$("button:not([disabled])",root).filter(x=>!x.hidden&&x.offsetParent!==null&&getComputedStyle(x).visibility!=="hidden");
+    const f=$$("button:not([disabled])",root).filter(x=>!x.hidden&&x.offsetParent!==null&&getComputedStyle(x).visibility!=="hidden"&&getComputedStyle(x).display!=="none");
     if(!f.length)return;
     const a=f[0],z=f[f.length-1];
     if(e.shiftKey&&(document.activeElement===a||!root.contains(document.activeElement))){e.preventDefault();z.focus()}
@@ -273,5 +262,4 @@ function refresh(){
 
 refresh();
 sync();
-if(root.classList.contains("on"))autoOn();
 })();
