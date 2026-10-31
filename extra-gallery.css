@@ -100,7 +100,7 @@ html.xg-lock,html.xg-lock body{overflow:hidden}
 .xg-buy[hidden]{display:none}
 
 @media(max-width:700px){
-  .xg-box{width:calc(var(--dh) * .7679 * .92)}
+  .xg-box{width:calc(var(--dh) * .7064);height:calc(var(--dh) * .92)}
   .xg-tags{left:calc(100% - 20px);top:-5%;gap:8px}
   .xg-tag{width:26px;padding-top:26px}
   .xg-tag::before{height:26px}
